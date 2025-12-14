@@ -4,6 +4,8 @@ import { generatePrintHtml } from '../renderers/htmlRenderer';
 import { getSettings } from '../config/settings';
 import { printHtml } from '../renderers/printerRenderer';
 import { codeIntelligence } from '../services/codeIntelligence';
+import { withProgress } from '../utils/progress';
+import { isLargeFile, confirmLargeFileRender, getPerformanceConfig } from '../utils/performance';
 
 /**
  * Metadata extracted from the current file
@@ -57,34 +59,102 @@ export async function printFileCommand(): Promise<void> {
 
     logger.info(`File metadata extracted: ${metadata.fileName} (${metadata.lineCount} lines)`);
 
+    // Get performance config
+    const perfConfig = getPerformanceConfig();
+
+    // Check if file is large and needs confirmation
+    if (isLargeFile(metadata.lineCount, perfConfig.maxLines)) {
+      const confirmed = await confirmLargeFileRender(metadata.lineCount);
+      if (!confirmed) {
+        logger.info('User cancelled printing large file');
+        return;
+      }
+    }
+
     // Get user settings
     const settings = getSettings();
     logger.info(`Settings loaded: fontSize=${settings.fontSize}, showLineNumbers=${settings.showLineNumbers}`);
 
-    // Query code intelligence
-    const foldedRanges = settings.foldedRegions !== 'expand'
-      ? await codeIntelligence.getFoldedRanges(metadata.uri, settings.foldedRegions)
-      : [];
+    // Use progress indicator for large files
+    if (isLargeFile(metadata.lineCount, perfConfig.maxLines)) {
+      await withProgress(
+        'Printing File',
+        async (reporter, token) => {
+          const startTime = Date.now();
 
-    // Get symbol boundaries for function/class separators
-    let symbolBoundaries = settings.showSeparators
-      ? await codeIntelligence.getSymbolBoundaries(metadata.uri)
-      : [];
+          // Step 1: Query code intelligence (20% of progress)
+          reporter.reportWithTime(1, 5, startTime, 'Analyzing code structure...');
 
-    // Get import section separator (always add if imports exist)
-    const importSectionEnd = codeIntelligence.getImportSectionEnd(metadata.content, metadata.languageId);
-    if (importSectionEnd > 0) {
-      // Merge import separator with symbol boundaries, avoiding duplicates
-      const allBoundaries = new Set([importSectionEnd, ...symbolBoundaries]);
-      symbolBoundaries = Array.from(allBoundaries).sort((a, b) => a - b);
+          const foldedRanges = settings.foldedRegions !== 'expand'
+            ? await codeIntelligence.getFoldedRanges(metadata.uri, settings.foldedRegions)
+            : [];
+
+          // Get symbol boundaries for function/class separators
+          let symbolBoundaries = settings.showSeparators
+            ? await codeIntelligence.getSymbolBoundaries(metadata.uri)
+            : [];
+
+          // Get import section separator (always add if imports exist)
+          const importSectionEnd = codeIntelligence.getImportSectionEnd(metadata.content, metadata.languageId);
+          if (importSectionEnd > 0) {
+            // Merge import separator with symbol boundaries, avoiding duplicates
+            const allBoundaries = new Set([importSectionEnd, ...symbolBoundaries]);
+            symbolBoundaries = Array.from(allBoundaries).sort((a, b) => a - b);
+          }
+
+          // Check cancellation
+          if (token.isCancellationRequested) {
+            logger.info('Print operation cancelled by user');
+            throw new Error('Print operation was cancelled');
+          }
+
+          // Step 2: Generate HTML (60% of progress)
+          reporter.reportWithTime(3, 5, startTime, 'Generating HTML...');
+          const html = await generatePrintHtml(metadata.content, metadata, settings, symbolBoundaries, foldedRanges);
+          logger.info(`HTML generated successfully (${html.length} bytes)`);
+
+          // Check cancellation
+          if (token.isCancellationRequested) {
+            logger.info('Print operation cancelled by user');
+            throw new Error('Print operation was cancelled');
+          }
+
+          // Step 3: Print via browser (80% of progress)
+          reporter.reportWithTime(4, 5, startTime, 'Opening print dialog...');
+          await printHtml(html, metadata.fileName);
+
+          // Complete
+          reporter.report('Complete!', 20);
+        },
+        true // Enable cancellation
+      );
+    } else {
+      // For small files, process without progress indicator
+      // Query code intelligence
+      const foldedRanges = settings.foldedRegions !== 'expand'
+        ? await codeIntelligence.getFoldedRanges(metadata.uri, settings.foldedRegions)
+        : [];
+
+      // Get symbol boundaries for function/class separators
+      let symbolBoundaries = settings.showSeparators
+        ? await codeIntelligence.getSymbolBoundaries(metadata.uri)
+        : [];
+
+      // Get import section separator (always add if imports exist)
+      const importSectionEnd = codeIntelligence.getImportSectionEnd(metadata.content, metadata.languageId);
+      if (importSectionEnd > 0) {
+        // Merge import separator with symbol boundaries, avoiding duplicates
+        const allBoundaries = new Set([importSectionEnd, ...symbolBoundaries]);
+        symbolBoundaries = Array.from(allBoundaries).sort((a, b) => a - b);
+      }
+
+      // Generate HTML
+      const html = await generatePrintHtml(metadata.content, metadata, settings, symbolBoundaries, foldedRanges);
+      logger.info(`HTML generated successfully (${html.length} bytes)`);
+
+      // Print via browser
+      await printHtml(html, metadata.fileName);
     }
-
-    // Generate HTML
-    const html = await generatePrintHtml(metadata.content, metadata, settings, symbolBoundaries, foldedRanges);
-    logger.info(`HTML generated successfully (${html.length} bytes)`);
-
-    // Print via browser
-    await printHtml(html, metadata.fileName);
 
     logger.info('Print File command completed successfully');
 
