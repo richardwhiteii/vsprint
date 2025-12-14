@@ -39,6 +39,28 @@
           "when": "editorHasSelection"
         }
       ]
+    },
+    "configuration": {
+      "title": "VSPrint",
+      "properties": {
+        "vsprint.fontSize": {
+          "type": "number",
+          "default": 10,
+          "minimum": 6,
+          "maximum": 20,
+          "description": "Font size for printed code (in points)"
+        },
+        "vsprint.fontFamily": {
+          "type": "string",
+          "default": "Consolas, Monaco, 'Courier New', monospace",
+          "description": "Font family for printed code"
+        },
+        "vsprint.showLineNumbers": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show line numbers in printed code"
+        }
+      }
     }
   },
   "scripts": {
