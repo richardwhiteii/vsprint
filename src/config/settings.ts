@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { ColorScheme } from '../utils/cssLoader';
 
 /**
  * Print settings configuration
@@ -15,6 +16,9 @@ export interface PrintSettings {
   headerTemplate: string;
   footerTemplate: string;
   columns: 1 | 2 | 4;
+  customCss?: string;
+  colorScheme?: ColorScheme;
+  builtinTheme?: 'default' | 'codeReview' | 'minimal' | 'documentation' | 'grayscale';
 }
 
 /**
@@ -31,7 +35,10 @@ const DEFAULT_SETTINGS: PrintSettings = {
   showSeparators: false,
   headerTemplate: '{filename}',
   footerTemplate: 'Page {page} of {pages}',
-  columns: 1
+  columns: 1,
+  customCss: undefined,
+  colorScheme: undefined,
+  builtinTheme: 'default'
 };
 
 /**
@@ -54,6 +61,9 @@ export function getSettings(): PrintSettings {
     showSeparators: config.get<boolean>('showSeparators', DEFAULT_SETTINGS.showSeparators),
     headerTemplate: config.get<string>('header.template', DEFAULT_SETTINGS.headerTemplate),
     footerTemplate: config.get<string>('footer.template', DEFAULT_SETTINGS.footerTemplate),
-    columns: config.get<1 | 2 | 4>('columns', DEFAULT_SETTINGS.columns)
+    columns: config.get<1 | 2 | 4>('columns', DEFAULT_SETTINGS.columns),
+    customCss: config.get<string>('customCss') || DEFAULT_SETTINGS.customCss,
+    colorScheme: config.get<ColorScheme>('colorScheme') || DEFAULT_SETTINGS.colorScheme,
+    builtinTheme: config.get<'default' | 'codeReview' | 'minimal' | 'documentation' | 'grayscale'>('builtinTheme') || DEFAULT_SETTINGS.builtinTheme
   };
 }

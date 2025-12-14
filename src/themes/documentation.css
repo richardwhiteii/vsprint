@@ -1,0 +1,118 @@
+/**
+ * Documentation Theme
+ * Optimized for readable code documentation with larger text and generous spacing
+ */
+
+:root {
+  /* Documentation theme CSS variables */
+  --vsprint-bg-color: #fefefe;
+  --vsprint-text-color: #2c3e50;
+  --vsprint-line-number-color: #95a5a6;
+  --vsprint-border-color: #bdc3c7;
+  --vsprint-header-bg: #ecf0f1;
+  --vsprint-code-font: 'Consolas', 'Monaco', 'Courier New', monospace;
+  --vsprint-comment-font: 'Georgia', 'Times New Roman', serif;
+
+  /* Generous spacing for readability */
+  --vsprint-margin-top: 15mm;
+  --vsprint-margin-bottom: 15mm;
+  --vsprint-margin-left: 15mm;
+  --vsprint-margin-right: 15mm;
+  --vsprint-font-size: 11pt;
+  --vsprint-line-height: 1.8;
+}
+
+@page {
+  margin: 15mm;
+  size: A4;
+}
+
+body {
+  font-size: var(--vsprint-font-size);
+  line-height: var(--vsprint-line-height);
+  color: var(--vsprint-text-color);
+}
+
+.header {
+  background-color: var(--vsprint-header-bg);
+  padding: 20px;
+  border-radius: 6px;
+  margin-bottom: 30px;
+  border-left: 4px solid #3498db;
+}
+
+.header h1 {
+  font-size: 16pt;
+  font-weight: 600;
+  color: #34495e;
+  margin-bottom: 10px;
+}
+
+.header .metadata {
+  font-size: 10pt;
+  color: #7f8c8d;
+  line-height: 1.6;
+}
+
+.line-number {
+  color: var(--vsprint-line-number-color);
+  font-size: 9pt;
+  padding-right: 12px;
+  padding-left: 8px;
+  width: 55px;
+  border-right: 1px solid var(--vsprint-border-color);
+  background-color: #f8f9fa;
+}
+
+.code-line {
+  padding-left: 15px;
+}
+
+.code-line pre {
+  font-size: var(--vsprint-font-size);
+  line-height: var(--vsprint-line-height);
+  font-family: var(--vsprint-code-font);
+}
+
+/* Enhanced separators for documentation sections */
+.separator td {
+  border-top: 1px solid var(--vsprint-border-color);
+  padding-top: 15px;
+  padding-bottom: 5px;
+}
+
+/* Footer styling for documentation */
+.footer, .page-footer {
+  font-size: 9pt;
+  color: #7f8c8d;
+  border-top: 2px solid var(--vsprint-border-color);
+  padding-top: 10px;
+}
+
+.page-footer {
+  margin-top: 15px;
+}
+
+/* Enhanced readability for comments (if syntax highlighting supports it) */
+.comment {
+  font-family: var(--vsprint-comment-font);
+  font-style: italic;
+  color: #16a085;
+}
+
+@media print {
+  /* Ensure generous margins for readability */
+  @page {
+    margin: 15mm !important;
+  }
+
+  /* Prevent breaks in the middle of code blocks */
+  .code-container tr {
+    page-break-inside: avoid;
+  }
+
+  /* Keep headers with content */
+  .header {
+    page-break-after: avoid;
+  }
+}

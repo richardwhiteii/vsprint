@@ -1,0 +1,99 @@
+/**
+ * Code Review Theme
+ * Optimized for code reviews with wide margins for handwritten annotations
+ */
+
+:root {
+  /* Override base CSS variables for code review layout */
+  --vsprint-bg-color: #ffffff;
+  --vsprint-text-color: #24292e;
+  --vsprint-line-number-color: #0969da;
+  --vsprint-border-color: #d0d7de;
+  --vsprint-header-bg: #f6f8fa;
+  --vsprint-code-font: 'Consolas', 'Monaco', 'Courier New', monospace;
+
+  /* Code review specific variables */
+  --vsprint-margin-left: 35mm;
+  --vsprint-margin-right: 15mm;
+  --vsprint-font-size: 11pt;
+  --vsprint-line-height: 1.8;
+}
+
+@page {
+  margin: 10mm 15mm 10mm 35mm;
+  size: A4;
+}
+
+body {
+  font-size: var(--vsprint-font-size);
+  line-height: var(--vsprint-line-height);
+}
+
+.header {
+  background-color: var(--vsprint-header-bg);
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 25px;
+}
+
+.header h1 {
+  font-size: 14pt;
+  font-weight: 600;
+  color: var(--vsprint-text-color);
+}
+
+.header .metadata {
+  margin-top: 8px;
+  font-size: 9pt;
+  color: #57606a;
+}
+
+.line-number {
+  font-weight: 600;
+  color: var(--vsprint-line-number-color);
+  background-color: #f6f8fa;
+  padding-right: 15px;
+  padding-left: 8px;
+  width: 60px;
+  border-right: 2px solid var(--vsprint-border-color);
+}
+
+.code-line {
+  padding-left: 15px;
+}
+
+.code-line pre {
+  font-size: var(--vsprint-font-size);
+  line-height: var(--vsprint-line-height);
+}
+
+/* Enhanced separators for clear function boundaries */
+.separator td {
+  border-top: 2px dashed #d0d7de;
+  padding-top: 12px;
+  height: 20px;
+}
+
+/* Make important code constructs stand out */
+tr:hover {
+  background-color: #f6f8fa;
+}
+
+/* Page footer with review metadata */
+.footer, .page-footer {
+  font-size: 9pt;
+  color: #57606a;
+  border-top: 1px solid var(--vsprint-border-color);
+}
+
+@media print {
+  /* Ensure annotations margin is preserved */
+  @page {
+    margin-left: 35mm !important;
+  }
+
+  /* Prevent breaks within code blocks */
+  .code-container tr {
+    page-break-inside: avoid;
+  }
+}
