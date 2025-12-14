@@ -1,0 +1,116 @@
+/**
+ * Grayscale Theme
+ * Optimized for black & white printers with high contrast and no color
+ */
+
+:root {
+  /* Grayscale theme CSS variables */
+  --vsprint-bg-color: #ffffff;
+  --vsprint-text-color: #000000;
+  --vsprint-line-number-color: #666666;
+  --vsprint-border-color: #333333;
+  --vsprint-header-bg: #f5f5f5;
+  --vsprint-code-font: 'Consolas', 'Monaco', 'Courier New', monospace;
+
+  --vsprint-margin-top: 10mm;
+  --vsprint-margin-bottom: 10mm;
+  --vsprint-margin-left: 10mm;
+  --vsprint-margin-right: 10mm;
+  --vsprint-font-size: 10pt;
+  --vsprint-line-height: 1.5;
+}
+
+@page {
+  margin: 10mm;
+  size: A4;
+}
+
+body {
+  font-size: var(--vsprint-font-size);
+  line-height: var(--vsprint-line-height);
+  color: var(--vsprint-text-color);
+}
+
+.header {
+  background-color: var(--vsprint-header-bg);
+  padding: 12px;
+  margin-bottom: 20px;
+  border: 2px solid var(--vsprint-border-color);
+}
+
+.header h1 {
+  font-size: 13pt;
+  font-weight: bold;
+  color: var(--vsprint-text-color);
+}
+
+.header .metadata {
+  font-size: 9pt;
+  color: #333333;
+  margin-top: 6px;
+}
+
+.line-number {
+  color: var(--vsprint-line-number-color);
+  font-weight: normal;
+  padding-right: 10px;
+  padding-left: 5px;
+  width: 50px;
+  border-right: 2px solid var(--vsprint-border-color);
+}
+
+.code-line {
+  padding-left: 10px;
+}
+
+.code-line pre {
+  font-size: var(--vsprint-font-size);
+  line-height: var(--vsprint-line-height);
+}
+
+/* Strong separators for B&W printing */
+.separator td {
+  border-top: 3px double var(--vsprint-border-color);
+  padding-top: 10px;
+}
+
+.footer, .page-footer {
+  font-size: 9pt;
+  color: #333333;
+  border-top: 2px solid var(--vsprint-border-color);
+}
+
+@media print {
+  /* High contrast for B&W printers */
+  * {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+  }
+
+  .header {
+    border: 2px solid #000000 !important;
+    background-color: #ffffff !important;
+  }
+
+  .line-number {
+    color: #666666 !important;
+    border-right: 2px solid #000000 !important;
+  }
+
+  .separator td {
+    border-top: 3px double #000000 !important;
+  }
+
+  .footer, .page-footer {
+    border-top: 2px solid #000000 !important;
+  }
+
+  /* Force bold/italic instead of colors for syntax */
+  .keyword, .type {
+    font-weight: bold !important;
+  }
+
+  .comment {
+    font-style: italic !important;
+  }
+}

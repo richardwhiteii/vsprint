@@ -4,6 +4,8 @@ import { syntaxHighlighter } from '../services/syntaxHighlighter';
 import { FoldRange } from '../services/codeIntelligence';
 import { visualizeWhitespace } from '../utils/textTransform';
 import { pageLayoutService } from '../services/pageLayout';
+import { loadCustomCss, loadBuiltinTheme, combineCssStyles, BuiltinThemeName } from '../utils/cssLoader';
+import * as vscode from 'vscode';
 
 /**
  * Escape HTML entities to prevent XSS and rendering issues
@@ -56,6 +58,22 @@ function generateStyles(settings: PrintSettings, backgroundColor: string, foregr
 
   return `
     <style>
+      /* CSS Variable Hooks for Theme Customization */
+      :root {
+        --vsprint-bg-color: ${backgroundColor};
+        --vsprint-text-color: ${foregroundColor};
+        --vsprint-line-number-color: #999;
+        --vsprint-border-color: #ccc;
+        --vsprint-header-bg: transparent;
+        --vsprint-code-font: ${settings.fontFamily};
+        --vsprint-font-size: ${settings.fontSize}pt;
+        --vsprint-line-height: 1.5;
+        --vsprint-margin-top: 10mm;
+        --vsprint-margin-bottom: 10mm;
+        --vsprint-margin-left: 10mm;
+        --vsprint-margin-right: 10mm;
+      }
+
       * {
         margin: 0;
         padding: 0;
@@ -63,17 +81,18 @@ function generateStyles(settings: PrintSettings, backgroundColor: string, foregr
       }
 
       body {
-        font-family: ${settings.fontFamily};
-        font-size: ${settings.fontSize}pt;
-        line-height: 1.5;
-        color: ${foregroundColor};
-        background: ${backgroundColor};
+        font-family: var(--vsprint-code-font);
+        font-size: var(--vsprint-font-size);
+        line-height: var(--vsprint-line-height);
+        color: var(--vsprint-text-color);
+        background: var(--vsprint-bg-color);
       }
 
       .header {
         margin-bottom: 20px;
         padding-bottom: 10px;
-        border-bottom: 1px solid #ccc;
+        border-bottom: 1px solid var(--vsprint-border-color);
+        background-color: var(--vsprint-header-bg);
       }
 
       .header h1 {
@@ -91,7 +110,7 @@ function generateStyles(settings: PrintSettings, backgroundColor: string, foregr
         padding: 5px 0;
         font-size: ${settings.fontSize}pt;
         font-weight: bold;
-        border-bottom: 1px solid #ccc;
+        border-bottom: 1px solid var(--vsprint-border-color);
       }
 
       .page-footer {
@@ -99,7 +118,7 @@ function generateStyles(settings: PrintSettings, backgroundColor: string, foregr
         padding: 5px 0;
         font-size: ${settings.fontSize - 1}pt;
         text-align: center;
-        border-top: 1px solid #ccc;
+        border-top: 1px solid var(--vsprint-border-color);
         color: #666;
       }
 
@@ -115,8 +134,8 @@ function generateStyles(settings: PrintSettings, backgroundColor: string, foregr
       .line-number {
         text-align: right;
         padding-right: 10px;
-        color: #999;
-        border-right: 1px solid #ccc;
+        color: var(--vsprint-line-number-color);
+        border-right: 1px solid var(--vsprint-border-color);
         user-select: none;
         vertical-align: top;
         width: 50px;
@@ -143,7 +162,7 @@ function generateStyles(settings: PrintSettings, backgroundColor: string, foregr
       .footer {
         margin-top: 20px;
         padding-top: 10px;
-        border-top: 1px solid #ccc;
+        border-top: 1px solid var(--vsprint-border-color);
         text-align: center;
         font-size: ${settings.fontSize - 1}pt;
         color: #666;
@@ -345,7 +364,40 @@ export async function generatePrintHtml(
   // Apply syntax highlighting
   const highlightedCode = await syntaxHighlighter.highlight(processedContent, metadata.languageId, settings.theme);
 
-  const styles = generateStyles(settings, backgroundColor, foregroundColor);
+  // Generate base styles
+  const baseStyles = generateStyles(settings, backgroundColor, foregroundColor);
+
+  // Load custom CSS or built-in theme if specified
+  let additionalCss = '';
+
+  // Try to load custom CSS first (takes precedence)
+  if (settings.customCss && settings.customCss.trim()) {
+    try {
+      additionalCss = await loadCustomCss(settings.customCss);
+    } catch (error) {
+      vscode.window.showErrorMessage(
+        `VSPrint: Failed to load custom CSS: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+  // If no custom CSS, try to load built-in theme
+  else if (settings.builtinTheme && settings.builtinTheme !== 'default') {
+    try {
+      additionalCss = await loadBuiltinTheme(settings.builtinTheme as BuiltinThemeName);
+    } catch (error) {
+      vscode.window.showWarningMessage(
+        `VSPrint: Failed to load built-in theme '${settings.builtinTheme}': ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
+  // Combine base styles with additional CSS and color scheme overrides
+  const finalStyles = combineCssStyles(
+    baseStyles,
+    additionalCss,
+    settings.colorScheme
+  );
+
   const header = generateHeader(metadata);
   const codeTable = generateCodeTable(highlightedCode, settings, true, symbolBoundaries);
   const footer = generateFooter();
@@ -371,7 +423,7 @@ export async function generatePrintHtml(
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escapeHtml(metadata.fileName)} - Print</title>
-  ${styles}
+  ${finalStyles}
 </head>
 <body>
   ${header}
