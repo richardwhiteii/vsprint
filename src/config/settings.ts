@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { ColorScheme } from '../utils/cssLoader';
 import { WatermarkPosition } from '../utils/watermark';
 import { BrandingPosition } from '../utils/branding';
+import { QRCodePosition } from '../utils/qrcode';
 
 /**
  * Print settings configuration
@@ -50,6 +51,14 @@ export interface PrintSettings {
     showAuthor: boolean;
     showDate: boolean;
     dateFormat: 'relative' | 'absolute';
+  };
+  accessibility?: {
+    highContrast: boolean;
+    largePrint: boolean;
+  };
+  qrcode?: {
+    enabled: boolean;
+    position: QRCodePosition;
   };
 }
 
@@ -100,6 +109,14 @@ const DEFAULT_SETTINGS: PrintSettings = {
     showAuthor: true,
     showDate: true,
     dateFormat: 'relative'
+  },
+  accessibility: {
+    highContrast: false,
+    largePrint: false
+  },
+  qrcode: {
+    enabled: false,
+    position: 'topRight'
   }
 };
 
@@ -156,6 +173,14 @@ export function getSettings(): PrintSettings {
       showAuthor: config.get<boolean>('blame.showAuthor', DEFAULT_SETTINGS.blame!.showAuthor),
       showDate: config.get<boolean>('blame.showDate', DEFAULT_SETTINGS.blame!.showDate),
       dateFormat: config.get<'relative' | 'absolute'>('blame.dateFormat', DEFAULT_SETTINGS.blame!.dateFormat)
+    },
+    accessibility: {
+      highContrast: config.get<boolean>('accessibility.highContrast', DEFAULT_SETTINGS.accessibility!.highContrast),
+      largePrint: config.get<boolean>('accessibility.largePrint', DEFAULT_SETTINGS.accessibility!.largePrint)
+    },
+    qrcode: {
+      enabled: config.get<boolean>('qrcode.enabled', DEFAULT_SETTINGS.qrcode!.enabled),
+      position: config.get<QRCodePosition>('qrcode.position', DEFAULT_SETTINGS.qrcode!.position)
     }
   };
 }
