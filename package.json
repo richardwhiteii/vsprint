@@ -12,7 +12,8 @@
   ],
   "activationEvents": [
     "onCommand:vsprint.printFile",
-    "onCommand:vsprint.printSelection"
+    "onCommand:vsprint.printSelection",
+    "onCommand:vsprint.exportHtml"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -24,6 +25,10 @@
       {
         "command": "vsprint.printSelection",
         "title": "VSPrint: Print Selection"
+      },
+      {
+        "command": "vsprint.exportHtml",
+        "title": "VSPrint: Export to HTML"
       }
     ],
     "menus": {
@@ -37,6 +42,11 @@
           "command": "vsprint.printSelection",
           "group": "navigation@2",
           "when": "editorHasSelection"
+        },
+        {
+          "command": "vsprint.exportHtml",
+          "group": "navigation@3",
+          "when": "editorTextFocus"
         }
       ]
     },
@@ -62,19 +72,33 @@
         },
         "vsprint.theme": {
           "type": "string",
-          "enum": ["light", "dark", "github-light", "github-dark", "monokai"],
+          "enum": [
+            "light",
+            "dark",
+            "github-light",
+            "github-dark",
+            "monokai"
+          ],
           "default": "github-light",
           "description": "Syntax highlighting theme for printed code"
         },
         "vsprint.lineWrap": {
           "type": "string",
-          "enum": ["none", "soft", "hard"],
+          "enum": [
+            "none",
+            "soft",
+            "hard"
+          ],
           "default": "soft",
           "description": "Line wrapping mode: none (overflow), soft (word boundaries), hard (character boundaries)"
         },
         "vsprint.showWhitespace": {
           "type": "string",
-          "enum": ["none", "boundary", "all"],
+          "enum": [
+            "none",
+            "boundary",
+            "all"
+          ],
           "default": "none",
           "description": "Whitespace visualization: none (invisible), boundary (between words), all (every space/tab)"
         }
@@ -90,11 +114,14 @@
     "lint": "tsc --noEmit"
   },
   "devDependencies": {
+    "@types/mocha": "^10.0.10",
     "@types/node": "^18.0.0",
     "@types/vscode": "^1.85.0",
     "@vscode/test-electron": "^2.3.0",
     "@vscode/vsce": "^3.7.1",
     "esbuild": "^0.19.0",
+    "glob": "^13.0.0",
+    "mocha": "^11.7.5",
     "typescript": "^5.0.0"
   },
   "dependencies": {
