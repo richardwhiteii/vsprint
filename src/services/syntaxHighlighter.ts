@@ -52,8 +52,8 @@ class SyntaxHighlighter {
   };
 
   /**
-   * Initialize the Shiki highlighter
-   * Loads all bundled languages and themes
+   * Initialize the Shiki highlighter with lazy loading
+   * Only loads themes and commonly used languages on first use
    */
   private async initialize(): Promise<void> {
     if (this.highlighter) {
@@ -65,10 +65,27 @@ class SyntaxHighlighter {
     }
 
     this.initPromise = (async () => {
-      this.highlighter = await createHighlighter({
-        themes: Object.values(this.themeMap),
-        langs: Object.keys(bundledLanguages)
-      });
+      try {
+        // Only load commonly used languages to avoid heavy initialization
+        const commonLanguages = [
+          'typescript', 'javascript', 'python', 'java', 'go', 'rust',
+          'cpp', 'c', 'csharp', 'php', 'ruby', 'sql', 'html', 'css',
+          'json', 'yaml', 'xml', 'bash', 'powershell', 'markdown'
+        ];
+        
+        // Filter to only languages that exist in bundledLanguages
+        const availableLangs = commonLanguages.filter(
+          lang => lang in bundledLanguages
+        );
+
+        this.highlighter = await createHighlighter({
+          themes: Object.values(this.themeMap),
+          langs: availableLangs
+        });
+      } catch (error) {
+        console.warn('Failed to initialize syntax highlighter:', error);
+        // Continue without syntax highlighting
+      }
     })();
 
     return this.initPromise;

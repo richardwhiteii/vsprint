@@ -3,9 +3,34 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { logger } from '../utils/logger';
 import { generatePrintHtml } from '../renderers/htmlRenderer';
-import { renderToPdf, PdfOptions, validatePdfOptions } from '../renderers/pdfRenderer';
 import { getSettings } from '../config/settings';
 import { FileMetadata } from './printFile';
+
+/**
+ * Lazy-loaded PDF renderer to avoid loading puppeteer on extension startup
+ */
+async function getPdfRenderer() {
+  const { renderToPdf, validatePdfOptions } = await import('../renderers/pdfRenderer');
+  return { renderToPdf, validatePdfOptions };
+}
+
+/**
+ * PDF options interface
+ */
+export interface PdfOptions {
+  margins: {
+    top: number;
+    bottom: number;
+    left: number;
+    right: number;
+  };
+  orientation: 'portrait' | 'landscape';
+  paperSize: 'A4' | 'Letter' | 'Legal' | 'custom';
+  customSize?: {
+    width: number;
+    height: number;
+  };
+}
 
 /**
  * Get PDF options from VS Code configuration
@@ -106,6 +131,9 @@ export async function exportPdfCommand(): Promise<void> {
     // Get PDF options
     const pdfOptions = getPdfOptions();
     logger.info(`PDF options loaded: ${JSON.stringify(pdfOptions)}`);
+
+    // Lazy-load PDF renderer
+    const { renderToPdf, validatePdfOptions } = await getPdfRenderer();
 
     // Validate PDF options
     try {
