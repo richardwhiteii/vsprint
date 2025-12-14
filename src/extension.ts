@@ -3,6 +3,7 @@ import { logger } from './utils/logger';
 import { registerPrintFileCommand } from './commands/printFile';
 import { registerPrintSelectionCommand } from './commands/printSelection';
 import { registerPrintDiffCommand } from './commands/printDiff';
+import { registerPrintWithBlameCommand } from './commands/printWithBlame';
 import { registerExportHtmlCommand } from './commands/exportHtml';
 import { registerExportPdfCommand } from './commands/exportPdf';
 import { registerPrintNotebookCommand } from './commands/printNotebook';
@@ -25,6 +26,7 @@ export function activate(context: vscode.ExtensionContext): void {
     registerPrintFileCommand(context);
     registerPrintSelectionCommand(context);
     registerPrintDiffCommand(context);
+    registerPrintWithBlameCommand(context);
     registerExportHtmlCommand(context);
     registerExportPdfCommand(context);
     registerPrintNotebookCommand(context);
