@@ -215,6 +215,22 @@
             }
           },
           "description": "Custom PDF paper size in millimeters - used when paperSize is 'custom'"
+        },
+        "vsprint.header.template": {
+          "type": "string",
+          "default": "{filename}",
+          "description": "Header template. Placeholders: {filename}, {filepath}, {date}, {time}, {page}, {pages}"
+        },
+        "vsprint.footer.template": {
+          "type": "string",
+          "default": "Page {page} of {pages}",
+          "description": "Footer template. Placeholders: {filename}, {filepath}, {date}, {time}, {page}, {pages}"
+        },
+        "vsprint.columns": {
+          "type": "number",
+          "enum": [1, 2, 4],
+          "default": 1,
+          "description": "Number of columns for code layout"
         }
       }
     }

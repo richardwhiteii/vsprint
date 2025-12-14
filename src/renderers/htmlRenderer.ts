@@ -3,6 +3,7 @@ import { PrintSettings } from '../config/settings';
 import { syntaxHighlighter } from '../services/syntaxHighlighter';
 import { FoldRange } from '../services/codeIntelligence';
 import { visualizeWhitespace } from '../utils/textTransform';
+import { pageLayoutService } from '../services/pageLayout';
 
 /**
  * Escape HTML entities to prevent XSS and rendering issues
@@ -50,6 +51,9 @@ function getWhiteSpaceStyles(lineWrap: 'none' | 'soft' | 'hard'): string {
  * @returns CSS string
  */
 function generateStyles(settings: PrintSettings, backgroundColor: string, foregroundColor: string): string {
+  // Get column-specific CSS
+  const columnCss = pageLayoutService.generateColumnCss(settings.columns);
+
   return `
     <style>
       * {
@@ -80,6 +84,27 @@ function generateStyles(settings: PrintSettings, backgroundColor: string, foregr
       .header .metadata {
         font-size: ${settings.fontSize - 1}pt;
         color: #666;
+      }
+
+      .page-header {
+        margin-bottom: 10px;
+        padding: 5px 0;
+        font-size: ${settings.fontSize}pt;
+        font-weight: bold;
+        border-bottom: 1px solid #ccc;
+      }
+
+      .page-footer {
+        margin-top: 10px;
+        padding: 5px 0;
+        font-size: ${settings.fontSize - 1}pt;
+        text-align: center;
+        border-top: 1px solid #ccc;
+        color: #666;
+      }
+
+      .code-content {
+        width: 100%;
       }
 
       .code-container {
@@ -135,6 +160,8 @@ function generateStyles(settings: PrintSettings, backgroundColor: string, foregr
         background-color: #f5f5f5;
       }
 
+      ${columnCss}
+
       @media print {
         @page {
           margin: 1in;
@@ -144,7 +171,7 @@ function generateStyles(settings: PrintSettings, backgroundColor: string, foregr
           background: none;
         }
 
-        .header, .footer {
+        .header, .footer, .page-header, .page-footer {
           page-break-inside: avoid;
         }
 
@@ -211,7 +238,8 @@ function generateCodeTable(
 
   const lines = processedContent.split('\n');
   const boundarySet = new Set(symbolBoundaries);
-  let html = '<table class="code-container">\n';
+  let html = `<div class="code-content columns-${settings.columns}">\n`;
+  html += '<table class="code-container code-block">\n';
 
   lines.forEach((line, index) => {
     const lineNumber = index + 1;
@@ -240,7 +268,8 @@ function generateCodeTable(
     }
   });
 
-  html += '</table>';
+  html += '</table>\n';
+  html += '</div>';
   return html;
 }
 
@@ -321,6 +350,21 @@ export async function generatePrintHtml(
   const codeTable = generateCodeTable(highlightedCode, settings, true, symbolBoundaries);
   const footer = generateFooter();
 
+  // Create page metadata for header/footer templates
+  const pageMetadata = pageLayoutService.createPageMetadata(
+    metadata.fileName,
+    metadata.filePath,
+    1 // For now, use 1 as total pages (can be calculated later based on content height)
+  );
+
+  // Render page header and footer if templates are provided
+  const pageHeader = settings.headerTemplate
+    ? pageLayoutService.renderHeader(settings.headerTemplate, 1, pageMetadata)
+    : '';
+  const pageFooter = settings.footerTemplate
+    ? pageLayoutService.renderFooter(settings.footerTemplate, 1, pageMetadata)
+    : '';
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -331,7 +375,9 @@ export async function generatePrintHtml(
 </head>
 <body>
   ${header}
+  ${pageHeader}
   ${codeTable}
+  ${pageFooter}
   ${footer}
 </body>
 </html>`;

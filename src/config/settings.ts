@@ -12,6 +12,9 @@ export interface PrintSettings {
   showWhitespace: 'none' | 'boundary' | 'all';
   foldedRegions: 'expand' | 'collapse' | 'asIs';
   showSeparators: boolean;
+  headerTemplate: string;
+  footerTemplate: string;
+  columns: 1 | 2 | 4;
 }
 
 /**
@@ -25,7 +28,10 @@ const DEFAULT_SETTINGS: PrintSettings = {
   lineWrap: 'soft',
   showWhitespace: 'none',
   foldedRegions: 'expand',
-  showSeparators: false
+  showSeparators: false,
+  headerTemplate: '{filename}',
+  footerTemplate: 'Page {page} of {pages}',
+  columns: 1
 };
 
 /**
@@ -45,6 +51,9 @@ export function getSettings(): PrintSettings {
     lineWrap: config.get<'none' | 'soft' | 'hard'>('lineWrap', DEFAULT_SETTINGS.lineWrap),
     showWhitespace: config.get<'none' | 'boundary' | 'all'>('showWhitespace', DEFAULT_SETTINGS.showWhitespace),
     foldedRegions: config.get<'expand' | 'collapse' | 'asIs'>('foldedRegions', DEFAULT_SETTINGS.foldedRegions),
-    showSeparators: config.get<boolean>('showSeparators', DEFAULT_SETTINGS.showSeparators)
+    showSeparators: config.get<boolean>('showSeparators', DEFAULT_SETTINGS.showSeparators),
+    headerTemplate: config.get<string>('header.template', DEFAULT_SETTINGS.headerTemplate),
+    footerTemplate: config.get<string>('footer.template', DEFAULT_SETTINGS.footerTemplate),
+    columns: config.get<1 | 2 | 4>('columns', DEFAULT_SETTINGS.columns)
   };
 }
