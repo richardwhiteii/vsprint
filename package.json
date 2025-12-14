@@ -14,7 +14,8 @@
     "onCommand:vsprint.printFile",
     "onCommand:vsprint.printSelection",
     "onCommand:vsprint.exportHtml",
-    "onCommand:vsprint.exportPdf"
+    "onCommand:vsprint.exportPdf",
+    "onView:vsprint.preview"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -34,8 +35,30 @@
       {
         "command": "vsprint.exportPdf",
         "title": "VSPrint: Export to PDF"
+      },
+      {
+        "command": "vsprint.showPreview",
+        "title": "VSPrint: Show Print Preview"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "vsprint-preview",
+          "title": "VSPrint Preview",
+          "icon": "$(file-text)"
+        }
+      ]
+    },
+    "views": {
+      "vsprint-preview": [
+        {
+          "type": "webview",
+          "id": "vsprint.preview",
+          "name": "Print Preview"
+        }
+      ]
+    },
     "menus": {
       "editor/context": [
         {

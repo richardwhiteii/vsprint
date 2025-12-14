@@ -6,6 +6,7 @@ import { registerExportHtmlCommand } from './commands/exportHtml';
 import { registerExportPdfCommand } from './commands/exportPdf';
 import { getTempFiles, clearTempFileTracker } from './renderers/printerRenderer';
 import { cleanupTempFiles } from './utils/tempFile';
+import { PreviewProvider } from './webview/previewProvider';
 
 /**
  * Extension activation function
@@ -23,7 +24,24 @@ export function activate(context: vscode.ExtensionContext): void {
     registerExportHtmlCommand(context);
     registerExportPdfCommand(context);
 
-    logger.info('All commands registered successfully');
+    // Register preview provider
+    const previewProvider = new PreviewProvider(context.extensionUri);
+    context.subscriptions.push(
+      vscode.window.registerWebviewViewProvider(
+        PreviewProvider.viewType,
+        previewProvider
+      )
+    );
+
+    // Register show preview command
+    context.subscriptions.push(
+      vscode.commands.registerCommand('vsprint.showPreview', async () => {
+        // Focus the preview panel
+        await vscode.commands.executeCommand('vsprint.preview.focus');
+      })
+    );
+
+    logger.info('All commands and webview registered successfully');
 
     // Show activation message in output channel
     const outputChannel = logger.getOutputChannel();
