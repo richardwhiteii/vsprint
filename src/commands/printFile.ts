@@ -65,9 +65,19 @@ export async function printFileCommand(): Promise<void> {
     const foldedRanges = settings.foldedRegions !== 'expand'
       ? await codeIntelligence.getFoldedRanges(metadata.uri, settings.foldedRegions)
       : [];
-    const symbolBoundaries = settings.showSeparators
+
+    // Get symbol boundaries for function/class separators
+    let symbolBoundaries = settings.showSeparators
       ? await codeIntelligence.getSymbolBoundaries(metadata.uri)
       : [];
+
+    // Get import section separator (always add if imports exist)
+    const importSectionEnd = codeIntelligence.getImportSectionEnd(metadata.content, metadata.languageId);
+    if (importSectionEnd > 0) {
+      // Merge import separator with symbol boundaries, avoiding duplicates
+      const allBoundaries = new Set([importSectionEnd, ...symbolBoundaries]);
+      symbolBoundaries = Array.from(allBoundaries).sort((a, b) => a - b);
+    }
 
     // Generate HTML
     const html = await generatePrintHtml(metadata.content, metadata, settings, symbolBoundaries, foldedRanges);
