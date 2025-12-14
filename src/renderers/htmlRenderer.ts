@@ -8,6 +8,15 @@ import { loadCustomCss, loadBuiltinTheme, combineCssStyles, BuiltinThemeName } f
 import { generateWatermarkCss, generateWatermarkHtml } from '../utils/watermark';
 import { generateBrandingCss, generateBrandingHtml, embedLogo, getWorkspaceRoot } from '../utils/branding';
 import { generateFileQRCode } from '../utils/qrcode';
+import {
+  isLargeFile,
+  confirmLargeFileRender,
+  getCachedRender,
+  setCachedRender,
+  generateCacheKey,
+  hashSettings,
+  chunkContent
+} from '../utils/performance';
 import * as vscode from 'vscode';
 
 /**
@@ -362,7 +371,8 @@ function applyFoldPlaceholders(content: string, foldedRanges: FoldRange[]): stri
 }
 
 /**
- * Generate complete print-ready HTML document
+ * Generate print HTML with streaming support for large files
+ * Uses chunked processing and caching for better performance
  *
  * @param content - Code content to render
  * @param metadata - File metadata
@@ -371,13 +381,42 @@ function applyFoldPlaceholders(content: string, foldedRanges: FoldRange[]): stri
  * @param foldedRanges - Folding ranges to apply
  * @returns Complete HTML document string
  */
-export async function generatePrintHtml(
+export async function generatePrintHtmlWithStreaming(
   content: string,
   metadata: FileMetadata,
   settings: PrintSettings,
   symbolBoundaries: number[] = [],
   foldedRanges: FoldRange[] = []
 ): Promise<string> {
+  const perfSettings = settings.performance || {
+    maxLines: 5000,
+    chunkSize: 1000,
+    cacheEnabled: true,
+    cacheSize: 50
+  };
+
+  // Check cache first if enabled
+  if (perfSettings.cacheEnabled) {
+    const cacheKey = generateCacheKey(
+      metadata.filePath,
+      metadata.lineCount,
+      hashSettings(settings)
+    );
+
+    const cached = getCachedRender(cacheKey);
+    if (cached) {
+      return cached;
+    }
+  }
+
+  // Check if file is large and warn user
+  if (isLargeFile(metadata.lineCount, perfSettings.maxLines)) {
+    const shouldContinue = await confirmLargeFileRender(metadata.lineCount);
+    if (!shouldContinue) {
+      throw new Error('User cancelled rendering of large file');
+    }
+  }
+
   // Get theme colors
   const backgroundColor = await syntaxHighlighter.getThemeBackground(settings.theme);
   const foregroundColor = await syntaxHighlighter.getThemeForeground(settings.theme);
@@ -385,9 +424,92 @@ export async function generatePrintHtml(
   // Apply fold placeholders before syntax highlighting
   const processedContent = applyFoldPlaceholders(content, foldedRanges);
 
-  // Apply syntax highlighting
-  const highlightedCode = await syntaxHighlighter.highlight(processedContent, metadata.languageId, settings.theme);
+  // Process in chunks for large files
+  let highlightedCode = '';
 
+  if (metadata.lineCount > perfSettings.chunkSize) {
+    // Use chunked processing with progress
+    await vscode.window.withProgress(
+      {
+        location: vscode.ProgressLocation.Notification,
+        title: 'Rendering code...',
+        cancellable: false
+      },
+      async (progress: vscode.Progress<{ message?: string; increment?: number }>) => {
+        const chunks = Array.from(chunkContent(processedContent, perfSettings.chunkSize));
+        const totalChunks = chunks.length;
+
+        for (let i = 0; i < chunks.length; i++) {
+          const chunk = chunks[i];
+
+          // Update progress
+          progress.report({
+            message: `Processing chunk ${i + 1} of ${totalChunks}`,
+            increment: (100 / totalChunks)
+          });
+
+          // Highlight chunk
+          const chunkHighlighted = await syntaxHighlighter.highlight(
+            chunk.content,
+            metadata.languageId,
+            settings.theme
+          );
+
+          highlightedCode += chunkHighlighted;
+
+          // Add newline between chunks if not the last chunk
+          if (i < chunks.length - 1) {
+            highlightedCode += '\n';
+          }
+
+          // Yield to event loop
+          await new Promise<void>(resolve => setTimeout(resolve, 0));
+        }
+      }
+    );
+  } else {
+    // Process normally for smaller files
+    highlightedCode = await syntaxHighlighter.highlight(
+      processedContent,
+      metadata.languageId,
+      settings.theme
+    );
+  }
+
+  // Continue with normal rendering process
+  const html = await generateHtmlDocument(
+    highlightedCode,
+    metadata,
+    settings,
+    backgroundColor,
+    foregroundColor,
+    symbolBoundaries
+  );
+
+  // Cache the result if caching is enabled
+  if (perfSettings.cacheEnabled) {
+    const cacheKey = generateCacheKey(
+      metadata.filePath,
+      metadata.lineCount,
+      hashSettings(settings)
+    );
+    setCachedRender(cacheKey, html);
+  }
+
+  return html;
+}
+
+/**
+ * Generate the complete HTML document (extracted for reuse)
+ */
+async function generateHtmlDocument(
+  highlightedCode: string,
+  metadata: FileMetadata,
+  settings: PrintSettings,
+  backgroundColor: string,
+  foregroundColor: string,
+  symbolBoundaries: number[] = []
+): Promise<string> {
   // Embed logo if branding is configured
   let logoDataUri: string | undefined;
   if (settings.branding?.logo) {
@@ -398,7 +520,6 @@ export async function generatePrintHtml(
       vscode.window.showWarningMessage(
         `VSPrint: Failed to embed logo: ${error instanceof Error ? error.message : String(error)}`
       );
-      // Continue without logo
     }
   }
 
@@ -408,7 +529,6 @@ export async function generatePrintHtml(
   // Load custom CSS or built-in theme if specified
   let additionalCss = '';
 
-  // Apply high contrast theme if enabled (takes precedence over other themes)
   if (settings.accessibility?.highContrast) {
     try {
       additionalCss = await loadBuiltinTheme('highContrast' as BuiltinThemeName);
@@ -417,9 +537,7 @@ export async function generatePrintHtml(
         `VSPrint: Failed to load high contrast theme: ${error instanceof Error ? error.message : String(error)}`
       );
     }
-  }
-  // Try to load custom CSS (takes precedence over built-in themes)
-  else if (settings.customCss && settings.customCss.trim()) {
+  } else if (settings.customCss && settings.customCss.trim()) {
     try {
       additionalCss = await loadCustomCss(settings.customCss);
     } catch (error) {
@@ -427,9 +545,7 @@ export async function generatePrintHtml(
         `VSPrint: Failed to load custom CSS: ${error instanceof Error ? error.message : String(error)}`
       );
     }
-  }
-  // If no custom CSS, try to load built-in theme
-  else if (settings.builtinTheme && settings.builtinTheme !== 'default') {
+  } else if (settings.builtinTheme && settings.builtinTheme !== 'default') {
     try {
       additionalCss = await loadBuiltinTheme(settings.builtinTheme as BuiltinThemeName);
     } catch (error) {
@@ -439,7 +555,6 @@ export async function generatePrintHtml(
     }
   }
 
-  // Combine base styles with additional CSS and color scheme overrides
   const finalStyles = combineCssStyles(
     baseStyles,
     additionalCss,
@@ -450,14 +565,12 @@ export async function generatePrintHtml(
   const codeTable = generateCodeTable(highlightedCode, settings, true, symbolBoundaries);
   const footer = generateFooter();
 
-  // Create page metadata for header/footer templates
   const pageMetadata = pageLayoutService.createPageMetadata(
     metadata.fileName,
     metadata.filePath,
-    1 // For now, use 1 as total pages (can be calculated later based on content height)
+    1
   );
 
-  // Render page header and footer if templates are provided
   const pageHeader = settings.headerTemplate
     ? pageLayoutService.renderHeader(settings.headerTemplate, 1, pageMetadata)
     : '';
@@ -465,20 +578,16 @@ export async function generatePrintHtml(
     ? pageLayoutService.renderFooter(settings.footerTemplate, 1, pageMetadata)
     : '';
 
-  // Generate watermark HTML if configured
   const watermarkHtml = settings.watermark ? generateWatermarkHtml(settings.watermark) : '';
 
-  // Generate branding HTML if configured
   let brandingHtml = '';
   if (settings.branding) {
     brandingHtml = generateBrandingHtml(settings.branding, logoDataUri);
   }
 
-  // Position branding in header or footer based on settings
   const brandingInHeader = settings.branding?.position === 'header' ? brandingHtml : '';
   const brandingInFooter = settings.branding?.position === 'footer' ? brandingHtml : '';
 
-  // Generate QR code if enabled
   let qrCodeCss = '';
   let qrCodeHtml = '';
   if (settings.qrcode?.enabled) {
@@ -490,11 +599,9 @@ export async function generatePrintHtml(
       vscode.window.showWarningMessage(
         `VSPrint: Failed to generate QR code: ${error instanceof Error ? error.message : String(error)}`
       );
-      // Continue without QR code
     }
   }
 
-  // Combine final styles with QR code CSS
   const finalStylesWithQR = qrCodeCss ? `${finalStyles}\n<style>${qrCodeCss}</style>` : finalStyles;
 
   return `<!DOCTYPE html>
@@ -517,4 +624,32 @@ export async function generatePrintHtml(
   ${brandingInFooter}
 </body>
 </html>`;
+}
+
+/**
+ * Generate complete print-ready HTML document
+ * Now automatically uses streaming for large files
+ *
+ * @param content - Code content to render
+ * @param metadata - File metadata
+ * @param settings - Print settings from user configuration
+ * @param symbolBoundaries - Line numbers where separators should be inserted
+ * @param foldedRanges - Folding ranges to apply
+ * @returns Complete HTML document string
+ */
+export async function generatePrintHtml(
+  content: string,
+  metadata: FileMetadata,
+  settings: PrintSettings,
+  symbolBoundaries: number[] = [],
+  foldedRanges: FoldRange[] = []
+): Promise<string> {
+  // Use streaming renderer which handles both small and large files
+  return generatePrintHtmlWithStreaming(
+    content,
+    metadata,
+    settings,
+    symbolBoundaries,
+    foldedRanges
+  );
 }
