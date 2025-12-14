@@ -7,6 +7,7 @@ import { pageLayoutService } from '../services/pageLayout';
 import { loadCustomCss, loadBuiltinTheme, combineCssStyles, BuiltinThemeName } from '../utils/cssLoader';
 import { generateWatermarkCss, generateWatermarkHtml } from '../utils/watermark';
 import { generateBrandingCss, generateBrandingHtml, embedLogo, getWorkspaceRoot } from '../utils/branding';
+import { generateFileQRCode } from '../utils/qrcode';
 import * as vscode from 'vscode';
 
 /**
@@ -55,6 +56,17 @@ function getWhiteSpaceStyles(lineWrap: 'none' | 'soft' | 'hard'): string {
  * @returns CSS string
  */
 function generateStyles(settings: PrintSettings, backgroundColor: string, foregroundColor: string): string {
+  // Apply large print settings if enabled
+  let fontSize = settings.fontSize;
+  let lineHeight = 1.5;
+  let margins = { top: 10, bottom: 10, left: 10, right: 10 };
+
+  if (settings.accessibility?.largePrint) {
+    fontSize = Math.max(fontSize, 16);  // Minimum 16pt
+    lineHeight = 1.5;  // Increased line spacing
+    margins = { top: 15, bottom: 15, left: 15, right: 15 };  // Larger margins
+  }
+
   // Get column-specific CSS
   const columnCss = pageLayoutService.generateColumnCss(settings.columns);
 
@@ -74,12 +86,12 @@ function generateStyles(settings: PrintSettings, backgroundColor: string, foregr
         --vsprint-border-color: #ccc;
         --vsprint-header-bg: transparent;
         --vsprint-code-font: ${settings.fontFamily};
-        --vsprint-font-size: ${settings.fontSize}pt;
-        --vsprint-line-height: 1.5;
-        --vsprint-margin-top: 10mm;
-        --vsprint-margin-bottom: 10mm;
-        --vsprint-margin-left: 10mm;
-        --vsprint-margin-right: 10mm;
+        --vsprint-font-size: ${fontSize}pt;
+        --vsprint-line-height: ${lineHeight};
+        --vsprint-margin-top: ${margins.top}mm;
+        --vsprint-margin-bottom: ${margins.bottom}mm;
+        --vsprint-margin-left: ${margins.left}mm;
+        --vsprint-margin-right: ${margins.right}mm;
       }
 
       * {
@@ -396,8 +408,18 @@ export async function generatePrintHtml(
   // Load custom CSS or built-in theme if specified
   let additionalCss = '';
 
-  // Try to load custom CSS first (takes precedence)
-  if (settings.customCss && settings.customCss.trim()) {
+  // Apply high contrast theme if enabled (takes precedence over other themes)
+  if (settings.accessibility?.highContrast) {
+    try {
+      additionalCss = await loadBuiltinTheme('highContrast' as BuiltinThemeName);
+    } catch (error) {
+      vscode.window.showWarningMessage(
+        `VSPrint: Failed to load high contrast theme: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+  // Try to load custom CSS (takes precedence over built-in themes)
+  else if (settings.customCss && settings.customCss.trim()) {
     try {
       additionalCss = await loadCustomCss(settings.customCss);
     } catch (error) {
@@ -456,16 +478,36 @@ export async function generatePrintHtml(
   const brandingInHeader = settings.branding?.position === 'header' ? brandingHtml : '';
   const brandingInFooter = settings.branding?.position === 'footer' ? brandingHtml : '';
 
+  // Generate QR code if enabled
+  let qrCodeCss = '';
+  let qrCodeHtml = '';
+  if (settings.qrcode?.enabled) {
+    try {
+      const qrCodeResult = await generateFileQRCode(metadata.filePath, settings.qrcode);
+      qrCodeCss = qrCodeResult.css;
+      qrCodeHtml = qrCodeResult.html;
+    } catch (error) {
+      vscode.window.showWarningMessage(
+        `VSPrint: Failed to generate QR code: ${error instanceof Error ? error.message : String(error)}`
+      );
+      // Continue without QR code
+    }
+  }
+
+  // Combine final styles with QR code CSS
+  const finalStylesWithQR = qrCodeCss ? `${finalStyles}\n<style>${qrCodeCss}</style>` : finalStyles;
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escapeHtml(metadata.fileName)} - Print</title>
-  ${finalStyles}
+  ${finalStylesWithQR}
 </head>
 <body>
   ${watermarkHtml}
+  ${qrCodeHtml}
   ${brandingInHeader}
   ${header}
   ${pageHeader}

@@ -414,6 +414,32 @@
           ],
           "default": "relative",
           "description": "Date format for git blame: relative (e.g., '2 days ago') or absolute (e.g., '2024-01-15')"
+        },
+        "vsprint.accessibility.highContrast": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable high contrast mode for accessibility (WCAG AA compliant colors)"
+        },
+        "vsprint.accessibility.largePrint": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable large print mode with minimum 16pt font, 1.5 line spacing, and larger margins"
+        },
+        "vsprint.qrcode.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Generate QR code linking to file in repository (GitHub, GitLab, Bitbucket)"
+        },
+        "vsprint.qrcode.position": {
+          "type": "string",
+          "enum": [
+            "topRight",
+            "bottomRight",
+            "topLeft",
+            "bottomLeft"
+          ],
+          "default": "topRight",
+          "description": "Position of QR code on the printed page"
         }
       }
     }
@@ -439,8 +465,10 @@
   },
   "dependencies": {
     "@types/marked": "^5.0.2",
+    "@types/qrcode": "^1.5.6",
     "marked": "^17.0.1",
     "puppeteer": "^24.33.0",
+    "qrcode": "^1.5.4",
     "shiki": "^1.0.0"
   }
 }

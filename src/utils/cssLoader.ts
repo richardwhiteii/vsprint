@@ -14,7 +14,8 @@ export const BUILTIN_THEMES = {
   codeReview: 'codeReview.css',
   minimal: 'minimal.css',
   documentation: 'documentation.css',
-  grayscale: 'grayscale.css'
+  grayscale: 'grayscale.css',
+  highContrast: 'highContrast.css'
 } as const;
 
 export type BuiltinThemeName = keyof typeof BUILTIN_THEMES;
