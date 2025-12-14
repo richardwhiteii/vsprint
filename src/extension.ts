@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 import { logger } from './utils/logger';
 import { registerPrintFileCommand } from './commands/printFile';
 import { registerPrintSelectionCommand } from './commands/printSelection';
+import { getTempFiles, clearTempFileTracker } from './renderers/printerRenderer';
+import { cleanupTempFiles } from './utils/tempFile';
 
 /**
  * Extension activation function
@@ -40,7 +42,17 @@ export function activate(context: vscode.ExtensionContext): void {
  * Extension deactivation function
  * Called when the extension is deactivated
  */
-export function deactivate(): void {
+export async function deactivate(): Promise<void> {
+  logger.info('VSPrint extension deactivating');
+
+  // Clean up temporary files
+  const tempFiles = getTempFiles();
+  if (tempFiles.length > 0) {
+    logger.info(`Cleaning up ${tempFiles.length} temporary file(s)`);
+    await cleanupTempFiles(tempFiles);
+    clearTempFileTracker();
+  }
+
   logger.info('VSPrint extension deactivated');
   logger.dispose();
 }

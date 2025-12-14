@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { logger } from '../utils/logger';
 import { generatePrintHtml } from '../renderers/htmlRenderer';
 import { getSettings } from '../config/settings';
+import { printHtml } from '../renderers/printerRenderer';
 
 /**
  * Metadata extracted from the current file
@@ -61,18 +62,13 @@ export async function printFileCommand(): Promise<void> {
     const html = generatePrintHtml(metadata.content, metadata, settings);
     logger.info(`HTML generated successfully (${html.length} bytes)`);
 
-    // Show success message with file information
-    const message = `Ready to print: ${metadata.fileName} (${metadata.lineCount} lines)`;
-    vscode.window.showInformationMessage(message);
+    // Print via browser
+    await printHtml(html, metadata.fileName);
 
     logger.info('Print File command completed successfully');
 
-    // TODO: In future tickets, the HTML will be displayed in a webview for printing
-    // For now, we generate the HTML and log success
-    return;
-
   } catch (error) {
-    const errorMessage = 'Failed to generate print HTML';
+    const errorMessage = 'Failed to print file';
     logger.error(errorMessage, error as Error);
     vscode.window.showErrorMessage(`${errorMessage}: ${(error as Error).message}`);
     throw error;
