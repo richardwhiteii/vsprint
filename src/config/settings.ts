@@ -46,6 +46,11 @@ export interface PrintSettings {
   markdown?: {
     embedImages: boolean;
   };
+  blame?: {
+    showAuthor: boolean;
+    showDate: boolean;
+    dateFormat: 'relative' | 'absolute';
+  };
 }
 
 /**
@@ -90,6 +95,11 @@ const DEFAULT_SETTINGS: PrintSettings = {
   },
   markdown: {
     embedImages: true
+  },
+  blame: {
+    showAuthor: true,
+    showDate: true,
+    dateFormat: 'relative'
   }
 };
 
@@ -141,6 +151,11 @@ export function getSettings(): PrintSettings {
     },
     markdown: {
       embedImages: config.get<boolean>('markdown.embedImages', DEFAULT_SETTINGS.markdown!.embedImages)
+    },
+    blame: {
+      showAuthor: config.get<boolean>('blame.showAuthor', DEFAULT_SETTINGS.blame!.showAuthor),
+      showDate: config.get<boolean>('blame.showDate', DEFAULT_SETTINGS.blame!.showDate),
+      dateFormat: config.get<'relative' | 'absolute'>('blame.dateFormat', DEFAULT_SETTINGS.blame!.dateFormat)
     }
   };
 }

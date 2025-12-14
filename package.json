@@ -14,6 +14,7 @@
     "onCommand:vsprint.printFile",
     "onCommand:vsprint.printSelection",
     "onCommand:vsprint.printDiff",
+    "onCommand:vsprint.printWithBlame",
     "onCommand:vsprint.exportHtml",
     "onCommand:vsprint.exportPdf",
     "onCommand:vsprint.printNotebook",
@@ -37,6 +38,10 @@
       {
         "command": "vsprint.printDiff",
         "title": "VSPrint: Print Git Diff"
+      },
+      {
+        "command": "vsprint.printWithBlame",
+        "title": "VSPrint: Print with Git Blame"
       },
       {
         "command": "vsprint.exportHtml",
@@ -390,6 +395,25 @@
           "type": "boolean",
           "default": true,
           "description": "Embed local images as base64 data URIs when printing markdown files"
+        },
+        "vsprint.blame.showAuthor": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show author name in git blame annotations"
+        },
+        "vsprint.blame.showDate": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show commit date in git blame annotations"
+        },
+        "vsprint.blame.dateFormat": {
+          "type": "string",
+          "enum": [
+            "relative",
+            "absolute"
+          ],
+          "default": "relative",
+          "description": "Date format for git blame: relative (e.g., '2 days ago') or absolute (e.g., '2024-01-15')"
         }
       }
     }
