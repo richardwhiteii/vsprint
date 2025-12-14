@@ -13,7 +13,8 @@
   "activationEvents": [
     "onCommand:vsprint.printFile",
     "onCommand:vsprint.printSelection",
-    "onCommand:vsprint.exportHtml"
+    "onCommand:vsprint.exportHtml",
+    "onCommand:vsprint.exportPdf"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -29,6 +30,10 @@
       {
         "command": "vsprint.exportHtml",
         "title": "VSPrint: Export to HTML"
+      },
+      {
+        "command": "vsprint.exportPdf",
+        "title": "VSPrint: Export to PDF"
       }
     ],
     "menus": {
@@ -46,6 +51,11 @@
         {
           "command": "vsprint.exportHtml",
           "group": "navigation@3",
+          "when": "editorTextFocus"
+        },
+        {
+          "command": "vsprint.exportPdf",
+          "group": "navigation@4",
           "when": "editorTextFocus"
         }
       ]
@@ -104,7 +114,11 @@
         },
         "vsprint.foldedRegions": {
           "type": "string",
-          "enum": ["expand", "collapse", "asIs"],
+          "enum": [
+            "expand",
+            "collapse",
+            "asIs"
+          ],
           "default": "expand",
           "description": "How to handle folded regions: expand (show all), collapse (show placeholder), asIs (respect editor state)"
         },
@@ -112,6 +126,72 @@
           "type": "boolean",
           "default": false,
           "description": "Show visual separators between functions and classes"
+        },
+        "vsprint.pdf.margins": {
+          "type": "object",
+          "default": {
+            "top": 10,
+            "bottom": 10,
+            "left": 10,
+            "right": 10
+          },
+          "properties": {
+            "top": {
+              "type": "number",
+              "minimum": 0
+            },
+            "bottom": {
+              "type": "number",
+              "minimum": 0
+            },
+            "left": {
+              "type": "number",
+              "minimum": 0
+            },
+            "right": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "description": "PDF margins in millimeters (top, bottom, left, right)"
+        },
+        "vsprint.pdf.orientation": {
+          "type": "string",
+          "enum": [
+            "portrait",
+            "landscape"
+          ],
+          "default": "portrait",
+          "description": "PDF page orientation"
+        },
+        "vsprint.pdf.paperSize": {
+          "type": "string",
+          "enum": [
+            "A4",
+            "Letter",
+            "Legal",
+            "custom"
+          ],
+          "default": "A4",
+          "description": "PDF paper size (A4: 210x297mm, Letter: 215.9x279.4mm, Legal: 215.9x355.6mm)"
+        },
+        "vsprint.pdf.customSize": {
+          "type": "object",
+          "default": {
+            "width": 210,
+            "height": 297
+          },
+          "properties": {
+            "width": {
+              "type": "number",
+              "minimum": 1
+            },
+            "height": {
+              "type": "number",
+              "minimum": 1
+            }
+          },
+          "description": "Custom PDF paper size in millimeters - used when paperSize is 'custom'"
         }
       }
     }
@@ -136,6 +216,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "puppeteer": "^24.33.0",
     "shiki": "^1.0.0"
   }
 }

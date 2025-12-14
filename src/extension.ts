@@ -3,6 +3,7 @@ import { logger } from './utils/logger';
 import { registerPrintFileCommand } from './commands/printFile';
 import { registerPrintSelectionCommand } from './commands/printSelection';
 import { registerExportHtmlCommand } from './commands/exportHtml';
+import { registerExportPdfCommand } from './commands/exportPdf';
 import { getTempFiles, clearTempFileTracker } from './renderers/printerRenderer';
 import { cleanupTempFiles } from './utils/tempFile';
 
@@ -20,6 +21,7 @@ export function activate(context: vscode.ExtensionContext): void {
     registerPrintFileCommand(context);
     registerPrintSelectionCommand(context);
     registerExportHtmlCommand(context);
+    registerExportPdfCommand(context);
 
     logger.info('All commands registered successfully');
 

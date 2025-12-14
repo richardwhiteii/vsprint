@@ -15,7 +15,8 @@ function extractFileMetadata(editor: vscode.TextEditor): FileMetadata {
     filePath: document.uri.fsPath,
     languageId: document.languageId,
     lineCount: document.lineCount,
-    content: document.getText()
+    content: document.getText(),
+    uri: document.uri
   };
 }
 
