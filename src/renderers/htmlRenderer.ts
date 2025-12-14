@@ -1,6 +1,7 @@
 import { FileMetadata } from '../commands/printFile';
 import { PrintSettings } from '../config/settings';
 import { syntaxHighlighter } from '../services/syntaxHighlighter';
+import { visualizeWhitespace } from '../utils/textTransform';
 
 /**
  * Escape HTML entities to prevent XSS and rendering issues
@@ -18,6 +19,25 @@ function escapeHtml(text: string): string {
   };
 
   return text.replace(/[&<>"']/g, (char) => entityMap[char]);
+}
+
+/**
+ * Get CSS white-space styles based on line wrap mode
+ *
+ * @param lineWrap - Line wrap mode: 'none' | 'soft' | 'hard'
+ * @returns CSS white-space and word-wrap properties
+ */
+function getWhiteSpaceStyles(lineWrap: 'none' | 'soft' | 'hard'): string {
+  switch (lineWrap) {
+    case 'none':
+      return 'white-space: pre; overflow-x: auto;';
+    case 'soft':
+      return 'white-space: pre-wrap; word-wrap: break-word;';
+    case 'hard':
+      return 'white-space: pre-wrap; word-break: break-all;';
+    default:
+      return 'white-space: pre-wrap; word-wrap: break-word;';
+  }
 }
 
 /**
@@ -84,10 +104,14 @@ function generateStyles(settings: PrintSettings, backgroundColor: string, foregr
       .code-line pre {
         margin: 0;
         padding: 0;
-        white-space: pre-wrap;
-        word-wrap: break-word;
+        ${getWhiteSpaceStyles(settings.lineWrap)}
         font-family: inherit;
         font-size: inherit;
+      }
+
+      .ws-space, .ws-tab {
+        color: #ccc;
+        font-weight: normal;
       }
 
       .footer {
@@ -161,7 +185,13 @@ function generateFooter(): string {
  * @returns HTML string for code table
  */
 function generateCodeTable(content: string, settings: PrintSettings, isPreHighlighted: boolean = false): string {
-  const lines = content.split('\n');
+  // Apply whitespace visualization if enabled and content is pre-highlighted
+  let processedContent = content;
+  if (isPreHighlighted && settings.showWhitespace !== 'none') {
+    processedContent = visualizeWhitespace(content, settings.showWhitespace);
+  }
+
+  const lines = processedContent.split('\n');
   let html = '<table class="code-container">\n';
 
   lines.forEach((line, index) => {
