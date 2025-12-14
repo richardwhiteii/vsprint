@@ -1,0 +1,46 @@
+{
+  "name": "vsprint",
+  "displayName": "VSPrint - Professional Code Printing",
+  "description": "Professional code printing for VS Code with advanced formatting and customization",
+  "version": "0.1.0",
+  "publisher": "richardwhiteii",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:vsprint.printFile",
+    "onCommand:vsprint.printSelection"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "vsprint.printFile",
+        "title": "VSPrint: Print Current File"
+      },
+      {
+        "command": "vsprint.printSelection",
+        "title": "VSPrint: Print Selection"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build:prod",
+    "build": "node esbuild.config.js",
+    "build:prod": "NODE_ENV=production node esbuild.config.js",
+    "watch": "node esbuild.config.js --watch",
+    "test": "node ./test/runTests.js",
+    "lint": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/test-electron": "^2.3.0",
+    "@vscode/vsce": "^3.7.1",
+    "esbuild": "^0.19.0",
+    "typescript": "^5.0.0"
+  }
+}
