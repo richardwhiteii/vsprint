@@ -33,6 +33,11 @@ export interface PrintSettings {
   };
   exclude?: string[];
   respectGitignore?: boolean;
+  diff?: {
+    mode: 'unified' | 'sideBySide';
+    showLineNumbers: boolean;
+    contextLines: number;
+  };
 }
 
 /**
@@ -64,7 +69,12 @@ const DEFAULT_SETTINGS: PrintSettings = {
     position: 'header'
   },
   exclude: [],
-  respectGitignore: true
+  respectGitignore: true,
+  diff: {
+    mode: 'sideBySide',
+    showLineNumbers: true,
+    contextLines: 3
+  }
 };
 
 /**
@@ -102,6 +112,11 @@ export function getSettings(): PrintSettings {
       position: config.get<BrandingPosition>('branding.position', DEFAULT_SETTINGS.branding!.position)
     },
     exclude: config.get<string[]>('exclude', DEFAULT_SETTINGS.exclude!),
-    respectGitignore: config.get<boolean>('respectGitignore', DEFAULT_SETTINGS.respectGitignore!)
+    respectGitignore: config.get<boolean>('respectGitignore', DEFAULT_SETTINGS.respectGitignore!),
+    diff: {
+      mode: config.get<'unified' | 'sideBySide'>('diff.mode', DEFAULT_SETTINGS.diff!.mode),
+      showLineNumbers: config.get<boolean>('diff.showLineNumbers', DEFAULT_SETTINGS.diff!.showLineNumbers),
+      contextLines: config.get<number>('diff.contextLines', DEFAULT_SETTINGS.diff!.contextLines)
+    }
   };
 }
