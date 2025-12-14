@@ -1,0 +1,310 @@
+/* VSPrint Preview Panel Styles */
+
+/* Root Variables */
+:root {
+  /* Use VS Code theme colors */
+  --vscode-background: var(--vscode-editor-background);
+  --vscode-foreground: var(--vscode-editor-foreground);
+  --vscode-border: var(--vscode-panel-border);
+  --vscode-button-background: var(--vscode-button-background);
+  --vscode-button-foreground: var(--vscode-button-foreground);
+  --vscode-button-hover: var(--vscode-button-hoverBackground);
+  --vscode-input-background: var(--vscode-input-background);
+}
+
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  color: var(--vscode-foreground);
+  background-color: var(--vscode-background);
+  overflow: hidden;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Toolbar Styles */
+.toolbar {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: var(--vscode-input-background);
+  border-bottom: 1px solid var(--vscode-border);
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.toolbar-section {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background-color: var(--vscode-border);
+  margin: 0 4px;
+}
+
+/* Button Styles */
+.toolbar-btn,
+.toolbar-btn-small {
+  background-color: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border: none;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 2px;
+  font-size: 13px;
+  transition: background-color 0.1s;
+}
+
+.toolbar-btn:hover,
+.toolbar-btn-small:hover {
+  background-color: var(--vscode-button-hover);
+}
+
+.toolbar-btn:active,
+.toolbar-btn-small:active {
+  opacity: 0.8;
+}
+
+.toolbar-btn {
+  min-width: 32px;
+  font-size: 16px;
+}
+
+.toolbar-btn-small {
+  padding: 3px 6px;
+  font-size: 11px;
+  min-width: 40px;
+}
+
+/* Zoom Display */
+.zoom-display {
+  min-width: 50px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Page Info */
+.page-info {
+  font-size: 12px;
+  color: var(--vscode-foreground);
+  opacity: 0.8;
+}
+
+/* Preview Container */
+.preview-container {
+  flex: 1;
+  overflow: auto;
+  padding: 20px;
+  background-color: var(--vscode-editor-background);
+}
+
+/* Preview Content Wrapper */
+.preview-content {
+  transform-origin: top center;
+  transition: transform 0.2s ease;
+  margin: 0 auto;
+  max-width: 100%;
+  background: white;
+  color: #000;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+/* Zoom States */
+.preview-content.zoom-50 {
+  transform: scale(0.5);
+}
+
+.preview-content.zoom-75 {
+  transform: scale(0.75);
+}
+
+.preview-content.zoom-100 {
+  transform: scale(1.0);
+}
+
+.preview-content.zoom-125 {
+  transform: scale(1.25);
+}
+
+.preview-content.zoom-150 {
+  transform: scale(1.5);
+}
+
+.preview-content.zoom-200 {
+  transform: scale(2.0);
+}
+
+/* State Messages */
+.loading-state,
+.empty-state,
+.error-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 14px;
+  color: var(--vscode-foreground);
+  opacity: 0.6;
+}
+
+.error-state {
+  color: var(--vscode-errorForeground);
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Print Preview Content Styles */
+/* Override styles from rendered HTML to fit in preview */
+.preview-content .header {
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #ccc;
+}
+
+.preview-content .header h1 {
+  font-size: 16px;
+  margin-bottom: 4px;
+  color: #333;
+}
+
+.preview-content .header .metadata {
+  font-size: 11px;
+  color: #666;
+}
+
+.preview-content .code-container {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.preview-content .line-number {
+  text-align: right;
+  padding-right: 8px;
+  color: #999;
+  border-right: 1px solid #ddd;
+  user-select: none;
+  vertical-align: top;
+  width: 40px;
+  font-size: 10px;
+}
+
+.preview-content .code-line {
+  padding-left: 8px;
+  vertical-align: top;
+}
+
+.preview-content .code-line pre {
+  margin: 0;
+  padding: 0;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.preview-content .footer {
+  margin-top: 16px;
+  padding-top: 8px;
+  border-top: 1px solid #ccc;
+  text-align: center;
+  font-size: 10px;
+  color: #666;
+}
+
+/* Page Break Indicators */
+.preview-content .page-break {
+  border-top: 2px dashed #ccc;
+  margin: 20px 0;
+  padding-top: 20px;
+  position: relative;
+}
+
+.preview-content .page-break::before {
+  content: 'Page Break';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  padding: 0 8px;
+  font-size: 10px;
+  color: #999;
+}
+
+/* Scrollbar Styling */
+.preview-container::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.preview-container::-webkit-scrollbar-track {
+  background: var(--vscode-scrollbarSlider-background);
+}
+
+.preview-container::-webkit-scrollbar-thumb {
+  background: var(--vscode-scrollbarSlider-hoverBackground);
+  border-radius: 5px;
+}
+
+.preview-container::-webkit-scrollbar-thumb:hover {
+  background: var(--vscode-scrollbarSlider-activeBackground);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 600px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toolbar-section {
+    justify-content: center;
+  }
+
+  .toolbar-divider {
+    display: none;
+  }
+}
+
+/* Dark Theme Support */
+body.vscode-dark .preview-content,
+body.vscode-high-contrast .preview-content {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+body.vscode-dark .preview-content .header h1,
+body.vscode-high-contrast .preview-content .header h1 {
+  color: #d4d4d4;
+}
+
+body.vscode-dark .preview-content .header,
+body.vscode-high-contrast .preview-content .header,
+body.vscode-dark .preview-content .footer,
+body.vscode-high-contrast .preview-content .footer {
+  border-color: #555;
+}
+
+body.vscode-dark .preview-content .line-number,
+body.vscode-high-contrast .preview-content .line-number {
+  border-color: #555;
+}
