@@ -1,5 +1,7 @@
 import puppeteer, { Browser, PDFOptions } from 'puppeteer';
+import * as vscode from 'vscode';
 import { logger } from '../utils/logger';
+import { ProgressCallback } from '../utils/progress';
 
 /**
  * PDF margin configuration (in millimeters)
@@ -140,19 +142,42 @@ async function launchBrowser(): Promise<Browser> {
  *
  * @param html - HTML content to convert to PDF
  * @param options - PDF generation options
+ * @param cancellationToken - Optional cancellation token for cancellable operations
+ * @param progressCallback - Optional callback for progress updates
  * @returns PDF file as Buffer
- * @throws Error if PDF generation fails
+ * @throws Error if PDF generation fails or is cancelled
  */
-export async function renderToPdf(html: string, options: PdfOptions): Promise<Buffer> {
+export async function renderToPdf(
+  html: string,
+  options: PdfOptions,
+  cancellationToken?: vscode.CancellationToken,
+  progressCallback?: ProgressCallback
+): Promise<Buffer> {
   logger.info('Starting PDF generation');
 
   let browser: Browser | null = null;
 
   try {
-    // Launch browser
+    // Check cancellation before starting
+    if (cancellationToken?.isCancellationRequested) {
+      throw new Error('PDF generation was cancelled');
+    }
+
+    // Step 1: Launch browser (20% of progress)
+    if (progressCallback) {
+      progressCallback(1, 5, 'Launching browser...');
+    }
     browser = await launchBrowser();
 
-    // Create new page
+    // Check cancellation after browser launch
+    if (cancellationToken?.isCancellationRequested) {
+      throw new Error('PDF generation was cancelled');
+    }
+
+    // Step 2: Create page (40% of progress)
+    if (progressCallback) {
+      progressCallback(2, 5, 'Creating page...');
+    }
     const page = await browser.newPage();
     logger.info('New page created');
 
@@ -163,17 +188,32 @@ export async function renderToPdf(html: string, options: PdfOptions): Promise<Bu
       deviceScaleFactor: 1
     });
 
-    // Set HTML content and wait for resources to load
+    // Check cancellation before loading content
+    if (cancellationToken?.isCancellationRequested) {
+      throw new Error('PDF generation was cancelled');
+    }
+
+    // Step 3: Load HTML content (60% of progress)
+    if (progressCallback) {
+      progressCallback(3, 5, 'Loading content...');
+    }
     await page.setContent(html, {
       waitUntil: 'networkidle0',
       timeout: 30000 // 30 second timeout
     });
     logger.info('HTML content loaded successfully');
 
-    // Build Puppeteer options
+    // Check cancellation before PDF generation
+    if (cancellationToken?.isCancellationRequested) {
+      throw new Error('PDF generation was cancelled');
+    }
+
+    // Step 4: Generate PDF (80% of progress)
+    if (progressCallback) {
+      progressCallback(4, 5, 'Generating PDF...');
+    }
     const puppeteerOptions = buildPuppeteerOptions(options);
 
-    // Generate PDF
     logger.info('Generating PDF buffer');
     const pdfUint8Array = await page.pdf(puppeteerOptions);
 
@@ -184,11 +224,21 @@ export async function renderToPdf(html: string, options: PdfOptions): Promise<Bu
     // Convert Uint8Array to Buffer
     const pdfBuffer = Buffer.from(pdfUint8Array);
 
+    // Step 5: Complete (100% of progress)
+    if (progressCallback) {
+      progressCallback(5, 5, 'Complete');
+    }
+
     logger.info(`PDF generated successfully (${pdfBuffer.length} bytes)`);
     return pdfBuffer;
 
   } catch (error) {
     logger.error('PDF generation failed', error as Error);
+
+    // Check if error is due to cancellation
+    if ((error as Error).message.includes('cancelled')) {
+      throw error;
+    }
 
     // Provide user-friendly error messages
     if ((error as Error).message.includes('timeout')) {

@@ -5,6 +5,7 @@ import { logger } from '../utils/logger';
 import { generatePrintHtml } from '../renderers/htmlRenderer';
 import { getSettings } from '../config/settings';
 import { FileMetadata } from './printFile';
+import { withProgress, getPdfJobQueue } from '../utils/progress';
 
 /**
  * Lazy-loaded PDF renderer to avoid loading puppeteer on extension startup
@@ -133,7 +134,7 @@ export async function exportPdfCommand(): Promise<void> {
     logger.info(`PDF options loaded: ${JSON.stringify(pdfOptions)}`);
 
     // Lazy-load PDF renderer
-    const { renderToPdf, validatePdfOptions } = await getPdfRenderer();
+    const { validatePdfOptions } = await getPdfRenderer();
 
     // Validate PDF options
     try {
@@ -164,46 +165,77 @@ export async function exportPdfCommand(): Promise<void> {
     const outputPath = saveUri.fsPath;
     logger.info(`PDF output path: ${outputPath}`);
 
-    // Show progress notification
-    await vscode.window.withProgress(
-      {
-        location: vscode.ProgressLocation.Notification,
-        title: 'Exporting to PDF',
-        cancellable: false
-      },
-      async (progress) => {
-        // Step 1: Generate HTML
-        progress.report({ message: 'Generating HTML...', increment: 20 });
+    // Show progress notification with cancellation support
+    await withProgress(
+      'Exporting to PDF',
+      async (reporter, token) => {
+        const startTime = Date.now();
+
+        // Step 1: Generate HTML (30% of progress)
+        reporter.report('Generating HTML...', 30);
         const html = await generatePrintHtml(metadata.content, metadata, settings);
         logger.info(`HTML generated successfully (${html.length} bytes)`);
 
-        // Step 2: Convert to PDF
-        progress.report({ message: 'Converting to PDF...', increment: 40 });
-        const pdfBuffer = await renderToPdf(html, pdfOptions);
+        // Check if operation was cancelled
+        if (token.isCancellationRequested) {
+          logger.info('PDF export cancelled by user');
+          throw new Error('PDF export was cancelled');
+        }
+
+        // Get the job queue
+        const jobQueue = getPdfJobQueue();
+        const queueSize = jobQueue.getQueueSize();
+
+        // Show queue status if there are other jobs
+        if (queueSize > 0) {
+          vscode.window.showInformationMessage(
+            `PDF generation queued (${queueSize} job(s) ahead). You'll be notified when it's ready.`
+          );
+        }
+
+        // Step 2: Queue PDF generation (40% of progress)
+        reporter.report('Queuing PDF generation...', 10);
+
+        // Enqueue the PDF generation job
+        const pdfBuffer = await jobQueue.enqueue(
+          html,
+          pdfOptions,
+          outputPath,
+          metadata.fileName,
+          token
+        );
+
+        // Check if operation was cancelled
+        if (token.isCancellationRequested) {
+          logger.info('PDF export cancelled by user');
+          throw new Error('PDF export was cancelled');
+        }
+
         logger.info(`PDF buffer created (${pdfBuffer.length} bytes)`);
 
-        // Step 3: Save to file
-        progress.report({ message: 'Saving PDF file...', increment: 30 });
+        // Step 3: Save to file (50% of progress)
+        reporter.reportWithTime(8, 10, startTime, 'Saving PDF file...');
         await savePdfToFile(pdfBuffer, outputPath);
         logger.info(`PDF saved to: ${outputPath}`);
 
-        // Complete
-        progress.report({ message: 'Complete!', increment: 10 });
-      }
-    );
+        // Complete (100% of progress)
+        reporter.report('Complete!', 10);
 
-    // Show success message with option to open the file
-    const openAction = 'Open PDF';
-    const result = await vscode.window.showInformationMessage(
-      `PDF exported successfully to ${path.basename(outputPath)}`,
-      openAction
-    );
+        // Show success notification with "Open" action
+        const openAction = 'Open';
+        const result = await vscode.window.showInformationMessage(
+          `PDF ready: ${path.basename(outputPath)}`,
+          openAction
+        );
 
-    // Open PDF if user clicked the action
-    if (result === openAction) {
-      await vscode.env.openExternal(vscode.Uri.file(outputPath));
-      logger.info('PDF opened in external viewer');
-    }
+        // Open PDF if user clicked the action
+        if (result === openAction) {
+          await vscode.env.openExternal(vscode.Uri.file(outputPath));
+          logger.info('PDF opened in external viewer');
+        }
+      },
+      true // Enable cancellation
+    );
 
     logger.info('Export to PDF command completed successfully');
 
