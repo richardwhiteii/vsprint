@@ -25,7 +25,21 @@
         "command": "vsprint.printSelection",
         "title": "VSPrint: Print Selection"
       }
-    ]
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "vsprint.printFile",
+          "group": "navigation@1",
+          "when": "editorTextFocus"
+        },
+        {
+          "command": "vsprint.printSelection",
+          "group": "navigation@2",
+          "when": "editorHasSelection"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run build:prod",
