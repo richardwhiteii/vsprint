@@ -83,19 +83,24 @@ async function processMarkdown(
   baseDir: string,
   embedImagesFlag: boolean
 ): Promise<string> {
-  // Clear previous blocks/images
-  codeBlocks.length = 0;
-  images.length = 0;
+  // Extract code blocks before parsing
+  const codeBlocks = extractCodeBlocks(markdown);
 
-  // Configure marked with custom renderer
-  marked.use({
-    renderer: customRenderer,
+  // Replace code blocks with placeholders
+  let processedMarkdown = markdown;
+  for (const block of codeBlocks) {
+    const original = '```' + block.language + '\n' + block.code + '```';
+    processedMarkdown = processedMarkdown.replace(original, block.placeholder);
+  }
+
+  // Configure marked
+  marked.setOptions({
     gfm: true, // GitHub Flavored Markdown
     breaks: true, // Convert \n to <br>
   });
 
   // Parse markdown to HTML
-  let html = await marked.parse(markdown);
+  let html = await marked.parse(processedMarkdown);
 
   // Process code blocks with syntax highlighting
   for (const block of codeBlocks) {
@@ -105,24 +110,46 @@ async function processMarkdown(
         block.language,
         theme
       );
-      html = html.replace(block.placeholder, highlighted);
+      html = html.replace(
+        block.placeholder,
+        `<pre class="code-block" data-language="${escapeHtml(block.language)}"><code>${highlighted}</code></pre>`
+      );
     } catch (error) {
       // Fallback to escaped code if highlighting fails
       logger.warn(`Failed to highlight code block (${block.language})`);
-      html = html.replace(block.placeholder, escapeHtml(block.code));
+      html = html.replace(
+        block.placeholder,
+        `<pre class="code-block" data-language="${escapeHtml(block.language)}"><code>${escapeHtml(block.code)}</code></pre>`
+      );
     }
   }
 
-  // Process images with embedding
+  // Process images with embedding if enabled
   if (embedImagesFlag) {
-    for (const img of images) {
-      const embeddedSrc = await embedLocalImage(img.href, baseDir);
-      if (embeddedSrc) {
-        html = html.replace(img.placeholder, embeddedSrc);
-      } else {
-        // Keep original path if embedding fails
-        html = html.replace(img.placeholder, escapeHtml(img.href));
+    // Find all img tags with local paths
+    const imgRegex = /<img\s+([^>]*?)src=["']([^"']+)["']([^>]*?)>/g;
+    const replacements: Array<{ original: string; replacement: string }> = [];
+    let imgMatch;
+
+    while ((imgMatch = imgRegex.exec(html)) !== null) {
+      const fullTag = imgMatch[0];
+      const beforeSrc = imgMatch[1];
+      const src = imgMatch[2];
+      const afterSrc = imgMatch[3];
+
+      // Skip external URLs and data URIs
+      if (!src.startsWith('http://') && !src.startsWith('https://') && !src.startsWith('data:')) {
+        const embeddedSrc = await embedLocalImage(src, baseDir);
+        if (embeddedSrc) {
+          const newTag = `<img ${beforeSrc}src="${embeddedSrc}"${afterSrc}>`;
+          replacements.push({ original: fullTag, replacement: newTag });
+        }
       }
+    }
+
+    // Apply replacements
+    for (const { original, replacement } of replacements) {
+      html = html.replace(original, replacement);
     }
   }
 
