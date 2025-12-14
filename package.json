@@ -77,6 +77,17 @@
           "enum": ["none", "boundary", "all"],
           "default": "none",
           "description": "Whitespace visualization: none (invisible), boundary (between words), all (every space/tab)"
+        },
+        "vsprint.foldedRegions": {
+          "type": "string",
+          "enum": ["expand", "collapse", "asIs"],
+          "default": "expand",
+          "description": "How to handle folded regions: expand (show all), collapse (show placeholder), asIs (respect editor state)"
+        },
+        "vsprint.showSeparators": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show visual separators between functions and classes"
         }
       }
     }
