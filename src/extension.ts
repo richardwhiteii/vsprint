@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { logger } from './utils/logger';
 import { registerPrintFileCommand } from './commands/printFile';
 import { registerPrintSelectionCommand } from './commands/printSelection';
+import { registerPrintDiffCommand } from './commands/printDiff';
 import { registerExportHtmlCommand } from './commands/exportHtml';
 import { registerExportPdfCommand } from './commands/exportPdf';
 import { getTempFiles, clearTempFileTracker } from './renderers/printerRenderer';
@@ -21,6 +22,7 @@ export function activate(context: vscode.ExtensionContext): void {
     // Register commands
     registerPrintFileCommand(context);
     registerPrintSelectionCommand(context);
+    registerPrintDiffCommand(context);
     registerExportHtmlCommand(context);
     registerExportPdfCommand(context);
 

@@ -13,6 +13,7 @@
   "activationEvents": [
     "onCommand:vsprint.printFile",
     "onCommand:vsprint.printSelection",
+    "onCommand:vsprint.printDiff",
     "onCommand:vsprint.exportHtml",
     "onCommand:vsprint.exportPdf",
     "onCommand:vsprint.saveProfile",
@@ -30,6 +31,10 @@
       {
         "command": "vsprint.printSelection",
         "title": "VSPrint: Print Selection"
+      },
+      {
+        "command": "vsprint.printDiff",
+        "title": "VSPrint: Print Git Diff"
       },
       {
         "command": "vsprint.exportHtml",
@@ -328,6 +333,27 @@
           "type": "boolean",
           "default": true,
           "description": "Respect .gitignore patterns when printing folders. If true, files ignored by git will be excluded from print output."
+        },
+        "vsprint.diff.mode": {
+          "type": "string",
+          "enum": [
+            "unified",
+            "sideBySide"
+          ],
+          "default": "sideBySide",
+          "description": "Git diff display mode: unified (single column) or sideBySide (two column comparison)"
+        },
+        "vsprint.diff.showLineNumbers": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show line numbers in git diff output"
+        },
+        "vsprint.diff.contextLines": {
+          "type": "number",
+          "default": 3,
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Number of context lines to show around changes in git diff"
         }
       }
     }
