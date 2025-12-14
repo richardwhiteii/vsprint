@@ -440,6 +440,32 @@
           ],
           "default": "topRight",
           "description": "Position of QR code on the printed page"
+        },
+        "vsprint.performance.maxLines": {
+          "type": "number",
+          "default": 5000,
+          "minimum": 1000,
+          "maximum": 50000,
+          "description": "Maximum number of lines before showing a warning. Files larger than this will trigger a confirmation dialog and use streaming rendering."
+        },
+        "vsprint.performance.chunkSize": {
+          "type": "number",
+          "default": 1000,
+          "minimum": 100,
+          "maximum": 10000,
+          "description": "Number of lines to process per chunk when rendering large files. Smaller values reduce memory usage but may increase processing time."
+        },
+        "vsprint.performance.cacheEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable caching of rendered content. Improves performance when re-rendering the same file with the same settings."
+        },
+        "vsprint.performance.cacheSize": {
+          "type": "number",
+          "default": 50,
+          "minimum": 1,
+          "maximum": 200,
+          "description": "Maximum number of rendered files to keep in cache. Uses LRU (Least Recently Used) eviction strategy."
         }
       }
     }

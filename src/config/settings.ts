@@ -5,6 +5,16 @@ import { BrandingPosition } from '../utils/branding';
 import { QRCodePosition } from '../utils/qrcode';
 
 /**
+ * Performance settings configuration
+ */
+export interface PerformanceSettings {
+  maxLines: number;
+  chunkSize: number;
+  cacheEnabled: boolean;
+  cacheSize: number;
+}
+
+/**
  * Print settings configuration
  */
 export interface PrintSettings {
@@ -60,6 +70,7 @@ export interface PrintSettings {
     enabled: boolean;
     position: QRCodePosition;
   };
+  performance?: PerformanceSettings;
 }
 
 /**
@@ -117,6 +128,12 @@ const DEFAULT_SETTINGS: PrintSettings = {
   qrcode: {
     enabled: false,
     position: 'topRight'
+  },
+  performance: {
+    maxLines: 5000,
+    chunkSize: 1000,
+    cacheEnabled: true,
+    cacheSize: 50
   }
 };
 
@@ -181,6 +198,28 @@ export function getSettings(): PrintSettings {
     qrcode: {
       enabled: config.get<boolean>('qrcode.enabled', DEFAULT_SETTINGS.qrcode!.enabled),
       position: config.get<QRCodePosition>('qrcode.position', DEFAULT_SETTINGS.qrcode!.position)
+    },
+    performance: {
+      maxLines: config.get<number>('performance.maxLines', DEFAULT_SETTINGS.performance!.maxLines),
+      chunkSize: config.get<number>('performance.chunkSize', DEFAULT_SETTINGS.performance!.chunkSize),
+      cacheEnabled: config.get<boolean>('performance.cacheEnabled', DEFAULT_SETTINGS.performance!.cacheEnabled),
+      cacheSize: config.get<number>('performance.cacheSize', DEFAULT_SETTINGS.performance!.cacheSize)
     }
+  };
+}
+
+/**
+ * Get performance settings from VS Code workspace configuration
+ *
+ * @returns PerformanceSettings object with user preferences or defaults
+ */
+export function getPerformanceSettings(): PerformanceSettings {
+  const config = vscode.workspace.getConfiguration('vsprint.performance');
+
+  return {
+    maxLines: config.get<number>('maxLines', DEFAULT_SETTINGS.performance!.maxLines),
+    chunkSize: config.get<number>('chunkSize', DEFAULT_SETTINGS.performance!.chunkSize),
+    cacheEnabled: config.get<boolean>('cacheEnabled', DEFAULT_SETTINGS.performance!.cacheEnabled),
+    cacheSize: config.get<number>('cacheSize', DEFAULT_SETTINGS.performance!.cacheSize)
   };
 }
