@@ -15,6 +15,9 @@
     "onCommand:vsprint.printSelection",
     "onCommand:vsprint.exportHtml",
     "onCommand:vsprint.exportPdf",
+    "onCommand:vsprint.saveProfile",
+    "onCommand:vsprint.loadProfile",
+    "onCommand:vsprint.deleteProfile",
     "onView:vsprint.preview"
   ],
   "main": "./dist/extension.js",
@@ -39,6 +42,18 @@
       {
         "command": "vsprint.showPreview",
         "title": "VSPrint: Show Print Preview"
+      },
+      {
+        "command": "vsprint.saveProfile",
+        "title": "VSPrint: Save Print Profile"
+      },
+      {
+        "command": "vsprint.loadProfile",
+        "title": "VSPrint: Load Print Profile"
+      },
+      {
+        "command": "vsprint.deleteProfile",
+        "title": "VSPrint: Delete Print Profile"
       }
     ],
     "viewsContainers": {
