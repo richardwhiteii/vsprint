@@ -274,6 +274,60 @@
           "enum": [1, 2, 4],
           "default": 1,
           "description": "Number of columns for code layout"
+        },
+        "vsprint.watermark.text": {
+          "type": "string",
+          "default": "",
+          "description": "Watermark text to overlay on printed pages (e.g., 'DRAFT', 'CONFIDENTIAL'). Leave empty to disable watermark."
+        },
+        "vsprint.watermark.opacity": {
+          "type": "number",
+          "default": 0.15,
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Watermark opacity (0.0-1.0). Lower values are more transparent. Recommended: 0.1-0.3 for readability."
+        },
+        "vsprint.watermark.position": {
+          "type": "string",
+          "enum": [
+            "center",
+            "diagonal",
+            "corner"
+          ],
+          "default": "diagonal",
+          "description": "Watermark position: center (centered), diagonal (45° rotation), corner (top-right corner)"
+        },
+        "vsprint.branding.logo": {
+          "type": "string",
+          "default": "",
+          "description": "Path to company logo image (PNG, JPG, SVG). Can be absolute or relative to workspace. Max size: 1MB."
+        },
+        "vsprint.branding.companyName": {
+          "type": "string",
+          "default": "",
+          "description": "Company name to display alongside logo in print output"
+        },
+        "vsprint.branding.position": {
+          "type": "string",
+          "enum": [
+            "header",
+            "footer"
+          ],
+          "default": "header",
+          "description": "Where to place branding: header (top of page) or footer (bottom of page)"
+        },
+        "vsprint.exclude": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Glob patterns for files to exclude when printing folders (e.g., ['*.test.ts', 'node_modules/**'])"
+        },
+        "vsprint.respectGitignore": {
+          "type": "boolean",
+          "default": true,
+          "description": "Respect .gitignore patterns when printing folders. If true, files ignored by git will be excluded from print output."
         }
       }
     }

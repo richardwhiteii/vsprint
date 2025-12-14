@@ -5,6 +5,8 @@ import { FoldRange } from '../services/codeIntelligence';
 import { visualizeWhitespace } from '../utils/textTransform';
 import { pageLayoutService } from '../services/pageLayout';
 import { loadCustomCss, loadBuiltinTheme, combineCssStyles, BuiltinThemeName } from '../utils/cssLoader';
+import { generateWatermarkCss, generateWatermarkHtml } from '../utils/watermark';
+import { generateBrandingCss, generateBrandingHtml, embedLogo, getWorkspaceRoot } from '../utils/branding';
 import * as vscode from 'vscode';
 
 /**
@@ -55,6 +57,12 @@ function getWhiteSpaceStyles(lineWrap: 'none' | 'soft' | 'hard'): string {
 function generateStyles(settings: PrintSettings, backgroundColor: string, foregroundColor: string): string {
   // Get column-specific CSS
   const columnCss = pageLayoutService.generateColumnCss(settings.columns);
+
+  // Generate watermark CSS if watermark is configured
+  const watermarkCss = settings.watermark ? generateWatermarkCss(settings.watermark) : '';
+
+  // Generate branding CSS if branding is configured
+  const brandingCss = settings.branding ? generateBrandingCss(settings.branding) : '';
 
   return `
     <style>
@@ -180,6 +188,10 @@ function generateStyles(settings: PrintSettings, backgroundColor: string, foregr
       }
 
       ${columnCss}
+
+      ${watermarkCss}
+
+      ${brandingCss}
 
       @media print {
         @page {
@@ -364,6 +376,20 @@ export async function generatePrintHtml(
   // Apply syntax highlighting
   const highlightedCode = await syntaxHighlighter.highlight(processedContent, metadata.languageId, settings.theme);
 
+  // Embed logo if branding is configured
+  let logoDataUri: string | undefined;
+  if (settings.branding?.logo) {
+    try {
+      const workspaceRoot = getWorkspaceRoot();
+      logoDataUri = await embedLogo(settings.branding.logo, workspaceRoot);
+    } catch (error) {
+      vscode.window.showWarningMessage(
+        `VSPrint: Failed to embed logo: ${error instanceof Error ? error.message : String(error)}`
+      );
+      // Continue without logo
+    }
+  }
+
   // Generate base styles
   const baseStyles = generateStyles(settings, backgroundColor, foregroundColor);
 
@@ -417,6 +443,19 @@ export async function generatePrintHtml(
     ? pageLayoutService.renderFooter(settings.footerTemplate, 1, pageMetadata)
     : '';
 
+  // Generate watermark HTML if configured
+  const watermarkHtml = settings.watermark ? generateWatermarkHtml(settings.watermark) : '';
+
+  // Generate branding HTML if configured
+  let brandingHtml = '';
+  if (settings.branding) {
+    brandingHtml = generateBrandingHtml(settings.branding, logoDataUri);
+  }
+
+  // Position branding in header or footer based on settings
+  const brandingInHeader = settings.branding?.position === 'header' ? brandingHtml : '';
+  const brandingInFooter = settings.branding?.position === 'footer' ? brandingHtml : '';
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -426,11 +465,14 @@ export async function generatePrintHtml(
   ${finalStyles}
 </head>
 <body>
+  ${watermarkHtml}
+  ${brandingInHeader}
   ${header}
   ${pageHeader}
   ${codeTable}
   ${pageFooter}
   ${footer}
+  ${brandingInFooter}
 </body>
 </html>`;
 }

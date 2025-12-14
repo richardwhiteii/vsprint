@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
 import { ColorScheme } from '../utils/cssLoader';
+import { WatermarkPosition } from '../utils/watermark';
+import { BrandingPosition } from '../utils/branding';
 
 /**
  * Print settings configuration
@@ -19,6 +21,18 @@ export interface PrintSettings {
   customCss?: string;
   colorScheme?: ColorScheme;
   builtinTheme?: 'default' | 'codeReview' | 'minimal' | 'documentation' | 'grayscale';
+  watermark?: {
+    text?: string;
+    opacity: number;
+    position: WatermarkPosition;
+  };
+  branding?: {
+    logo?: string;
+    companyName?: string;
+    position: BrandingPosition;
+  };
+  exclude?: string[];
+  respectGitignore?: boolean;
 }
 
 /**
@@ -38,7 +52,19 @@ const DEFAULT_SETTINGS: PrintSettings = {
   columns: 1,
   customCss: undefined,
   colorScheme: undefined,
-  builtinTheme: 'default'
+  builtinTheme: 'default',
+  watermark: {
+    text: '',
+    opacity: 0.15,
+    position: 'diagonal'
+  },
+  branding: {
+    logo: '',
+    companyName: '',
+    position: 'header'
+  },
+  exclude: [],
+  respectGitignore: true
 };
 
 /**
@@ -64,6 +90,18 @@ export function getSettings(): PrintSettings {
     columns: config.get<1 | 2 | 4>('columns', DEFAULT_SETTINGS.columns),
     customCss: config.get<string>('customCss') || DEFAULT_SETTINGS.customCss,
     colorScheme: config.get<ColorScheme>('colorScheme') || DEFAULT_SETTINGS.colorScheme,
-    builtinTheme: config.get<'default' | 'codeReview' | 'minimal' | 'documentation' | 'grayscale'>('builtinTheme') || DEFAULT_SETTINGS.builtinTheme
+    builtinTheme: config.get<'default' | 'codeReview' | 'minimal' | 'documentation' | 'grayscale'>('builtinTheme') || DEFAULT_SETTINGS.builtinTheme,
+    watermark: {
+      text: config.get<string>('watermark.text', DEFAULT_SETTINGS.watermark!.text),
+      opacity: config.get<number>('watermark.opacity', DEFAULT_SETTINGS.watermark!.opacity),
+      position: config.get<WatermarkPosition>('watermark.position', DEFAULT_SETTINGS.watermark!.position)
+    },
+    branding: {
+      logo: config.get<string>('branding.logo', DEFAULT_SETTINGS.branding!.logo),
+      companyName: config.get<string>('branding.companyName', DEFAULT_SETTINGS.branding!.companyName),
+      position: config.get<BrandingPosition>('branding.position', DEFAULT_SETTINGS.branding!.position)
+    },
+    exclude: config.get<string[]>('exclude', DEFAULT_SETTINGS.exclude!),
+    respectGitignore: config.get<boolean>('respectGitignore', DEFAULT_SETTINGS.respectGitignore!)
   };
 }
