@@ -3,6 +3,7 @@ import { logger } from '../utils/logger';
 import { generatePrintHtml } from '../renderers/htmlRenderer';
 import { getSettings } from '../config/settings';
 import { printHtml } from '../renderers/printerRenderer';
+import { codeIntelligence } from '../services/codeIntelligence';
 
 /**
  * Metadata extracted from the current file
@@ -13,6 +14,7 @@ export interface FileMetadata {
   languageId: string;
   lineCount: number;
   content: string;
+  uri: vscode.Uri;
 }
 
 /**
@@ -26,7 +28,8 @@ function extractFileMetadata(editor: vscode.TextEditor): FileMetadata {
     filePath: document.uri.fsPath,
     languageId: document.languageId,
     lineCount: document.lineCount,
-    content: document.getText()
+    content: document.getText(),
+    uri: document.uri
   };
 }
 
@@ -58,8 +61,16 @@ export async function printFileCommand(): Promise<void> {
     const settings = getSettings();
     logger.info(`Settings loaded: fontSize=${settings.fontSize}, showLineNumbers=${settings.showLineNumbers}`);
 
+    // Query code intelligence
+    const foldedRanges = settings.foldedRegions !== 'expand'
+      ? await codeIntelligence.getFoldedRanges(metadata.uri, settings.foldedRegions)
+      : [];
+    const symbolBoundaries = settings.showSeparators
+      ? await codeIntelligence.getSymbolBoundaries(metadata.uri)
+      : [];
+
     // Generate HTML
-    const html = await generatePrintHtml(metadata.content, metadata, settings);
+    const html = await generatePrintHtml(metadata.content, metadata, settings, symbolBoundaries, foldedRanges);
     logger.info(`HTML generated successfully (${html.length} bytes)`);
 
     // Print via browser

@@ -65,6 +65,17 @@
           "enum": ["light", "dark", "github-light", "github-dark", "monokai"],
           "default": "github-light",
           "description": "Syntax highlighting theme for printed code"
+        },
+        "vsprint.foldedRegions": {
+          "type": "string",
+          "enum": ["expand", "collapse", "asIs"],
+          "default": "expand",
+          "description": "How to handle folded regions: expand (show all), collapse (show placeholder), asIs (respect editor state)"
+        },
+        "vsprint.showSeparators": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show visual separators between functions and classes"
         }
       }
     }

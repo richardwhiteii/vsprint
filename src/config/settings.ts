@@ -8,6 +8,8 @@ export interface PrintSettings {
   fontFamily: string;
   showLineNumbers: boolean;
   theme: string;
+  foldedRegions: 'expand' | 'collapse' | 'asIs';
+  showSeparators: boolean;
 }
 
 /**
@@ -17,7 +19,9 @@ const DEFAULT_SETTINGS: PrintSettings = {
   fontSize: 10,
   fontFamily: "Consolas, Monaco, 'Courier New', monospace",
   showLineNumbers: true,
-  theme: 'github-light'
+  theme: 'github-light',
+  foldedRegions: 'expand',
+  showSeparators: false
 };
 
 /**
@@ -33,6 +37,8 @@ export function getSettings(): PrintSettings {
     fontSize: config.get<number>('fontSize', DEFAULT_SETTINGS.fontSize),
     fontFamily: config.get<string>('fontFamily', DEFAULT_SETTINGS.fontFamily),
     showLineNumbers: config.get<boolean>('showLineNumbers', DEFAULT_SETTINGS.showLineNumbers),
-    theme: config.get<string>('theme', DEFAULT_SETTINGS.theme)
+    theme: config.get<string>('theme', DEFAULT_SETTINGS.theme),
+    foldedRegions: config.get<'expand' | 'collapse' | 'asIs'>('foldedRegions', DEFAULT_SETTINGS.foldedRegions),
+    showSeparators: config.get<boolean>('showSeparators', DEFAULT_SETTINGS.showSeparators)
   };
 }
