@@ -11,12 +11,14 @@ import { registerPrintMarkdownCommand } from './commands/printMarkdown';
 import { getTempFiles, clearTempFileTracker } from './renderers/printerRenderer';
 import { cleanupTempFiles } from './utils/tempFile';
 import { PreviewProvider } from './webview/previewProvider';
+import { createVSprintApi, VSprintApi } from './api/extensionApi';
 
 /**
  * Extension activation function
  * Called when the extension is activated (command invoked, etc.)
+ * @returns Public API for other extensions
  */
-export function activate(context: vscode.ExtensionContext): void {
+export function activate(context: vscode.ExtensionContext): VSprintApi {
   // Initialize logger
   logger.initialize('VSPrint');
   logger.info('VSPrint extension activated');
@@ -58,6 +60,11 @@ export function activate(context: vscode.ExtensionContext): void {
     }
 
     logger.info('VSPrint extension initialization complete');
+
+    // Create and return public API
+    const api = createVSprintApi();
+    logger.info('VSPrint API created and ready for external extensions');
+    return api;
 
   } catch (error) {
     logger.error('Failed to activate VSPrint extension', error as Error);

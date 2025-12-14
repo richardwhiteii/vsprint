@@ -8,8 +8,35 @@
     "vscode": "^1.85.0"
   },
   "categories": [
+    "Formatters",
     "Other"
   ],
+  "keywords": [
+    "print",
+    "printing",
+    "code printing",
+    "syntax highlighting",
+    "pdf",
+    "export",
+    "html",
+    "code formatting",
+    "documentation",
+    "source code"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/richardwhiteii/vsprint.git"
+  },
+  "bugs": {
+    "url": "https://github.com/richardwhiteii/vsprint/issues"
+  },
+  "homepage": "https://github.com/richardwhiteii/vsprint#readme",
+  "license": "MIT",
+  "icon": "icon.png",
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
   "activationEvents": [
     "onCommand:vsprint.printFile",
     "onCommand:vsprint.printSelection",
@@ -98,26 +125,68 @@
       "editor/context": [
         {
           "command": "vsprint.printFile",
-          "group": "navigation@1",
+          "group": "9_vsprint@1",
           "when": "editorTextFocus"
         },
         {
           "command": "vsprint.printSelection",
-          "group": "navigation@2",
+          "group": "9_vsprint@2",
           "when": "editorHasSelection"
         },
         {
           "command": "vsprint.exportHtml",
-          "group": "navigation@3",
+          "group": "9_vsprint@3",
           "when": "editorTextFocus"
         },
         {
           "command": "vsprint.exportPdf",
-          "group": "navigation@4",
+          "group": "9_vsprint@4",
           "when": "editorTextFocus"
+        }
+      ],
+      "editor/title/context": [
+        {
+          "command": "vsprint.printFile",
+          "group": "1_vsprint@1"
+        },
+        {
+          "command": "vsprint.exportPdf",
+          "group": "1_vsprint@2"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "vsprint.printFile",
+          "group": "2_vsprint@1",
+          "when": "!explorerResourceIsFolder"
+        },
+        {
+          "command": "vsprint.exportPdf",
+          "group": "2_vsprint@2",
+          "when": "!explorerResourceIsFolder"
         }
       ]
     },
+    "keybindings": [
+      {
+        "command": "vsprint.printFile",
+        "key": "ctrl+alt+p",
+        "mac": "cmd+alt+p",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "vsprint.printSelection",
+        "key": "ctrl+alt+shift+p",
+        "mac": "cmd+alt+shift+p",
+        "when": "editorHasSelection"
+      },
+      {
+        "command": "vsprint.showPreview",
+        "key": "ctrl+alt+v",
+        "mac": "cmd+alt+v",
+        "when": "editorTextFocus"
+      }
+    ],
     "configuration": {
       "title": "VSPrint",
       "properties": {

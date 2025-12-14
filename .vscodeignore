@@ -1,13 +1,52 @@
+# Build and development files
 .vscode/**
 .vscode-test/**
 src/**
 test/**
+node_modules/**
+*.vsix
+
+# TypeScript configuration
+tsconfig.json
+esbuild.config.js
+
+# Git files
+.git
 .gitignore
-.yarnrc
-vsc-extension-quickstart.md
-**/tsconfig.json
-**/.eslintrc.json
+.gitattributes
+
+# CI/CD
+.github/**
+
+# Documentation (keep only README and CHANGELOG)
+docs/**
+*.md
+!README.md
+!CHANGELOG.md
+
+# Test files
+**/*.test.ts
+**/*.spec.ts
+
+# Source maps and TypeScript
 **/*.map
 **/*.ts
-esbuild.config.js
-node_modules/**
+!src/api/extensionApi.d.ts
+
+# Environment and config
+.env
+.env.*
+.npmrc
+.eslintrc.*
+.prettierrc.*
+.yarnrc
+vsc-extension-quickstart.md
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.log
+*.tmp
+.cache/
