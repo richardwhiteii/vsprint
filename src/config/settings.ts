@@ -38,6 +38,14 @@ export interface PrintSettings {
     showLineNumbers: boolean;
     contextLines: number;
   };
+  notebook?: {
+    showCellNumbers: boolean;
+    showOutputs: boolean;
+    maxOutputLines: number;
+  };
+  markdown?: {
+    embedImages: boolean;
+  };
 }
 
 /**
@@ -74,6 +82,14 @@ const DEFAULT_SETTINGS: PrintSettings = {
     mode: 'sideBySide',
     showLineNumbers: true,
     contextLines: 3
+  },
+  notebook: {
+    showCellNumbers: true,
+    showOutputs: true,
+    maxOutputLines: 100
+  },
+  markdown: {
+    embedImages: true
   }
 };
 
@@ -102,14 +118,14 @@ export function getSettings(): PrintSettings {
     colorScheme: config.get<ColorScheme>('colorScheme') || DEFAULT_SETTINGS.colorScheme,
     builtinTheme: config.get<'default' | 'codeReview' | 'minimal' | 'documentation' | 'grayscale'>('builtinTheme') || DEFAULT_SETTINGS.builtinTheme,
     watermark: {
-      text: config.get<string>('watermark.text', DEFAULT_SETTINGS.watermark!.text),
-      opacity: config.get<number>('watermark.opacity', DEFAULT_SETTINGS.watermark!.opacity),
-      position: config.get<WatermarkPosition>('watermark.position', DEFAULT_SETTINGS.watermark!.position)
+      text: config.get<string>('watermark.text') ?? DEFAULT_SETTINGS.watermark!.text,
+      opacity: config.get<number>('watermark.opacity') ?? DEFAULT_SETTINGS.watermark!.opacity,
+      position: config.get<WatermarkPosition>('watermark.position') ?? DEFAULT_SETTINGS.watermark!.position
     },
     branding: {
-      logo: config.get<string>('branding.logo', DEFAULT_SETTINGS.branding!.logo),
-      companyName: config.get<string>('branding.companyName', DEFAULT_SETTINGS.branding!.companyName),
-      position: config.get<BrandingPosition>('branding.position', DEFAULT_SETTINGS.branding!.position)
+      logo: config.get<string>('branding.logo') ?? DEFAULT_SETTINGS.branding!.logo,
+      companyName: config.get<string>('branding.companyName') ?? DEFAULT_SETTINGS.branding!.companyName,
+      position: config.get<BrandingPosition>('branding.position') ?? DEFAULT_SETTINGS.branding!.position
     },
     exclude: config.get<string[]>('exclude', DEFAULT_SETTINGS.exclude!),
     respectGitignore: config.get<boolean>('respectGitignore', DEFAULT_SETTINGS.respectGitignore!),
@@ -117,6 +133,14 @@ export function getSettings(): PrintSettings {
       mode: config.get<'unified' | 'sideBySide'>('diff.mode', DEFAULT_SETTINGS.diff!.mode),
       showLineNumbers: config.get<boolean>('diff.showLineNumbers', DEFAULT_SETTINGS.diff!.showLineNumbers),
       contextLines: config.get<number>('diff.contextLines', DEFAULT_SETTINGS.diff!.contextLines)
+    },
+    notebook: {
+      showCellNumbers: config.get<boolean>('notebook.showCellNumbers', DEFAULT_SETTINGS.notebook!.showCellNumbers),
+      showOutputs: config.get<boolean>('notebook.showOutputs', DEFAULT_SETTINGS.notebook!.showOutputs),
+      maxOutputLines: config.get<number>('notebook.maxOutputLines', DEFAULT_SETTINGS.notebook!.maxOutputLines)
+    },
+    markdown: {
+      embedImages: config.get<boolean>('markdown.embedImages', DEFAULT_SETTINGS.markdown!.embedImages)
     }
   };
 }

@@ -5,6 +5,8 @@ import { registerPrintSelectionCommand } from './commands/printSelection';
 import { registerPrintDiffCommand } from './commands/printDiff';
 import { registerExportHtmlCommand } from './commands/exportHtml';
 import { registerExportPdfCommand } from './commands/exportPdf';
+import { registerPrintNotebookCommand } from './commands/printNotebook';
+import { registerPrintMarkdownCommand } from './commands/printMarkdown';
 import { getTempFiles, clearTempFileTracker } from './renderers/printerRenderer';
 import { cleanupTempFiles } from './utils/tempFile';
 import { PreviewProvider } from './webview/previewProvider';
@@ -25,6 +27,8 @@ export function activate(context: vscode.ExtensionContext): void {
     registerPrintDiffCommand(context);
     registerExportHtmlCommand(context);
     registerExportPdfCommand(context);
+    registerPrintNotebookCommand(context);
+    registerPrintMarkdownCommand(context);
 
     // Register preview provider
     const previewProvider = new PreviewProvider(context.extensionUri);

@@ -16,6 +16,8 @@
     "onCommand:vsprint.printDiff",
     "onCommand:vsprint.exportHtml",
     "onCommand:vsprint.exportPdf",
+    "onCommand:vsprint.printNotebook",
+    "onCommand:vsprint.printMarkdown",
     "onCommand:vsprint.saveProfile",
     "onCommand:vsprint.loadProfile",
     "onCommand:vsprint.deleteProfile",
@@ -59,6 +61,14 @@
       {
         "command": "vsprint.deleteProfile",
         "title": "VSPrint: Delete Print Profile"
+      },
+      {
+        "command": "vsprint.printNotebook",
+        "title": "VSPrint: Print Jupyter Notebook"
+      },
+      {
+        "command": "vsprint.printMarkdown",
+        "title": "VSPrint: Print Rendered Markdown"
       }
     ],
     "viewsContainers": {
@@ -276,7 +286,11 @@
         },
         "vsprint.columns": {
           "type": "number",
-          "enum": [1, 2, 4],
+          "enum": [
+            1,
+            2,
+            4
+          ],
           "default": 1,
           "description": "Number of columns for code layout"
         },
@@ -288,8 +302,8 @@
         "vsprint.watermark.opacity": {
           "type": "number",
           "default": 0.15,
-          "minimum": 0.0,
-          "maximum": 1.0,
+          "minimum": 0,
+          "maximum": 1,
           "description": "Watermark opacity (0.0-1.0). Lower values are more transparent. Recommended: 0.1-0.3 for readability."
         },
         "vsprint.watermark.position": {
@@ -354,6 +368,28 @@
           "minimum": 0,
           "maximum": 10,
           "description": "Number of context lines to show around changes in git diff"
+        },
+        "vsprint.notebook.showCellNumbers": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show cell execution numbers in Jupyter notebook printouts"
+        },
+        "vsprint.notebook.showOutputs": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include cell outputs when printing Jupyter notebooks"
+        },
+        "vsprint.notebook.maxOutputLines": {
+          "type": "number",
+          "default": 100,
+          "minimum": 10,
+          "maximum": 1000,
+          "description": "Maximum number of lines to show for each cell output (longer outputs will be truncated)"
+        },
+        "vsprint.markdown.embedImages": {
+          "type": "boolean",
+          "default": true,
+          "description": "Embed local images as base64 data URIs when printing markdown files"
         }
       }
     }
@@ -378,6 +414,8 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@types/marked": "^5.0.2",
+    "marked": "^17.0.1",
     "puppeteer": "^24.33.0",
     "shiki": "^1.0.0"
   }
