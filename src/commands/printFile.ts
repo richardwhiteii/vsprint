@@ -59,7 +59,7 @@ export async function printFileCommand(): Promise<void> {
     logger.info(`Settings loaded: fontSize=${settings.fontSize}, showLineNumbers=${settings.showLineNumbers}`);
 
     // Generate HTML
-    const html = generatePrintHtml(metadata.content, metadata, settings);
+    const html = await generatePrintHtml(metadata.content, metadata, settings);
     logger.info(`HTML generated successfully (${html.length} bytes)`);
 
     // Print via browser

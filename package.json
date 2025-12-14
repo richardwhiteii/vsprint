@@ -59,6 +59,12 @@
           "type": "boolean",
           "default": true,
           "description": "Show line numbers in printed code"
+        },
+        "vsprint.theme": {
+          "type": "string",
+          "enum": ["light", "dark", "github-light", "github-dark", "monokai"],
+          "default": "github-light",
+          "description": "Syntax highlighting theme for printed code"
         }
       }
     }
@@ -78,5 +84,8 @@
     "@vscode/vsce": "^3.7.1",
     "esbuild": "^0.19.0",
     "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "shiki": "^1.0.0"
   }
 }
