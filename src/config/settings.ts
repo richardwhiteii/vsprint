@@ -7,6 +7,7 @@ export interface PrintSettings {
   fontSize: number;
   fontFamily: string;
   showLineNumbers: boolean;
+  theme: string;
 }
 
 /**
@@ -15,7 +16,8 @@ export interface PrintSettings {
 const DEFAULT_SETTINGS: PrintSettings = {
   fontSize: 10,
   fontFamily: "Consolas, Monaco, 'Courier New', monospace",
-  showLineNumbers: true
+  showLineNumbers: true,
+  theme: 'github-light'
 };
 
 /**
@@ -30,6 +32,7 @@ export function getSettings(): PrintSettings {
   return {
     fontSize: config.get<number>('fontSize', DEFAULT_SETTINGS.fontSize),
     fontFamily: config.get<string>('fontFamily', DEFAULT_SETTINGS.fontFamily),
-    showLineNumbers: config.get<boolean>('showLineNumbers', DEFAULT_SETTINGS.showLineNumbers)
+    showLineNumbers: config.get<boolean>('showLineNumbers', DEFAULT_SETTINGS.showLineNumbers),
+    theme: config.get<string>('theme', DEFAULT_SETTINGS.theme)
   };
 }

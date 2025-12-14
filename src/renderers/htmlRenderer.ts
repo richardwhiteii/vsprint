@@ -1,5 +1,6 @@
 import { FileMetadata } from '../commands/printFile';
 import { PrintSettings } from '../config/settings';
+import { syntaxHighlighter } from '../services/syntaxHighlighter';
 
 /**
  * Escape HTML entities to prevent XSS and rendering issues
@@ -23,9 +24,11 @@ function escapeHtml(text: string): string {
  * Generate CSS styles for the print document
  *
  * @param settings - Print settings from user configuration
+ * @param backgroundColor - Background color from theme
+ * @param foregroundColor - Foreground color from theme
  * @returns CSS string
  */
-function generateStyles(settings: PrintSettings): string {
+function generateStyles(settings: PrintSettings, backgroundColor: string, foregroundColor: string): string {
   return `
     <style>
       * {
@@ -38,8 +41,8 @@ function generateStyles(settings: PrintSettings): string {
         font-family: ${settings.fontFamily};
         font-size: ${settings.fontSize}pt;
         line-height: 1.5;
-        color: #000;
-        background: #fff;
+        color: ${foregroundColor};
+        background: ${backgroundColor};
       }
 
       .header {
@@ -154,24 +157,26 @@ function generateFooter(): string {
  *
  * @param content - Code content to render
  * @param settings - Print settings
+ * @param isPreHighlighted - Whether content is already HTML (syntax highlighted)
  * @returns HTML string for code table
  */
-function generateCodeTable(content: string, settings: PrintSettings): string {
+function generateCodeTable(content: string, settings: PrintSettings, isPreHighlighted: boolean = false): string {
   const lines = content.split('\n');
   let html = '<table class="code-container">\n';
 
   lines.forEach((line, index) => {
     const lineNumber = index + 1;
-    const escapedLine = escapeHtml(line);
+    // Only escape if not pre-highlighted
+    const lineContent = isPreHighlighted ? line : escapeHtml(line);
 
     if (settings.showLineNumbers) {
       html += `  <tr>
     <td class="line-number">${lineNumber}</td>
-    <td class="code-line"><pre>${escapedLine}</pre></td>
+    <td class="code-line"><pre>${lineContent}</pre></td>
   </tr>\n`;
     } else {
       html += `  <tr>
-    <td class="code-line"><pre>${escapedLine}</pre></td>
+    <td class="code-line"><pre>${lineContent}</pre></td>
   </tr>\n`;
     }
   });
@@ -188,14 +193,21 @@ function generateCodeTable(content: string, settings: PrintSettings): string {
  * @param settings - Print settings from user configuration
  * @returns Complete HTML document string
  */
-export function generatePrintHtml(
+export async function generatePrintHtml(
   content: string,
   metadata: FileMetadata,
   settings: PrintSettings
-): string {
-  const styles = generateStyles(settings);
+): Promise<string> {
+  // Get theme colors
+  const backgroundColor = await syntaxHighlighter.getThemeBackground(settings.theme);
+  const foregroundColor = await syntaxHighlighter.getThemeForeground(settings.theme);
+
+  // Apply syntax highlighting
+  const highlightedCode = await syntaxHighlighter.highlight(content, metadata.languageId, settings.theme);
+
+  const styles = generateStyles(settings, backgroundColor, foregroundColor);
   const header = generateHeader(metadata);
-  const codeTable = generateCodeTable(content, settings);
+  const codeTable = generateCodeTable(highlightedCode, settings, true);
   const footer = generateFooter();
 
   return `<!DOCTYPE html>
